@@ -320,6 +320,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 </div><!-- /scroll-area -->
 
+
 <!-- CUSTOM FOOD MODAL -->
 <div class="modal-overlay" id="customFoodModal">
   <div class="modal">
@@ -328,7 +329,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <button class="modal-close" onclick="closeModal('customFood')">&#215;</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Save a food to your personal list so you can quickly pick it any time.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Save a food to your personal list for quick access any time.</p>
       <div style="margin-bottom:10px;">
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="cfName" type="text" placeholder="e.g. My protein shake"/>
@@ -802,13 +803,7 @@ Fruit:[
 };
 
 const ALL_CATS=Object.keys(FOODS);
-const MY_FOODS_CAT='My Foods';
 let currentCat='Meat',selectedFood=null,currentPeriod='week',barcodeData=null;
-
-function getFoodsForCat(cat){
-  if(cat===MY_FOODS_CAT) return getCustomFoods();
-  return FOODS[cat]||[];
-}
 
 const K_ENTRIES='fibecheck_entries',K_GOALS='fibecheck_goals',K_CUSTOM='fibecheck_custom';
 function getEntries(){try{return JSON.parse(localStorage.getItem(K_ENTRIES))||[];}catch{return[];}}
@@ -828,12 +823,16 @@ function fmtDate(d){
 function r1(n){return Math.round(n*10)/10;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+const MY_FOODS_CAT='My Foods';
+function getFoodsForCat(cat){
+  return cat===MY_FOODS_CAT ? getCustomFoods() : (FOODS[cat]||[]);
+}
 function renderCats(){
   const custom=getCustomFoods();
   const cats=[...ALL_CATS,MY_FOODS_CAT];
-  document.getElementById('catRow').innerHTML=cats.map(c=>{
-    const badge=c===MY_FOODS_CAT&&custom.length?' ('+custom.length+')':'';
-    return `<button class="cat-btn${c===currentCat?' active':''}" onclick="setCat('${c}',this)">${c}${badge}</button>`;
+  document.getElementById('catRow').innerHTML=cats.map(cat=>{
+    const badge=cat===MY_FOODS_CAT&&custom.length?' ('+custom.length+')':'';
+    return '<button class="cat-btn'+(cat===currentCat?' active':'')+'" onclick="setCat(''+cat+'',this)">'+cat+badge+'</button>';
   }).join('');
 }
 
@@ -843,7 +842,7 @@ function setCat(cat,el){
   el.classList.add('active');
   document.getElementById('searchInput').value='';
   document.getElementById('manualEntry').style.display='none';
-  renderFoodList(getFoodsForCat(cat));
+  renderFoodList(getFoodsForCat(currentCat));
 }
 
 function filterFoods(){
@@ -861,23 +860,17 @@ function filterFoods(){
 }
 
 function renderFoodList(foods){
-  const isMyFoods=currentCat===MY_FOODS_CAT;
   if(!foods||!foods.length){
-    const msg=isMyFoods
-      ?'<div class="empty">No saved foods yet. Tap + Add to My Foods below or scan a barcode.</div>'
-      :'<div class="empty">No match — use manual entry or AI Estimate.</div>';
-    document.getElementById('foodList').innerHTML=msg;
+    document.getElementById('foodList').innerHTML='<div class="empty">No match — use manual entry below or try ✦ AI Estimate.</div>';
     return;
   }
-  document.getElementById('foodList').innerHTML=foods.map(f=>
-    `<div class="food-row${selectedFood&&selectedFood.n===f.n?' selected':''}" onclick="selectFood(this,'${esc(f.n)}',${f.p},${f.f})">
-      <div><div class="food-name">${esc(f.n)}</div><div class="food-per">per 100g</div></div>
-      <div style="display:flex;gap:5px;align-items:center;">
-        <span class="pill pill-p">${f.p}g P</span><span class="pill pill-f">${f.f}g F</span>
-        ${f.custom?`<button onclick="event.stopPropagation();deleteCustomFood(this,'${esc(f.n)}')" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 3px;" title="Remove from My Foods">&#215;</button>`:''}
-      </div>
-    </div>`
-  ).join('');
+  document.getElementById('foodList').innerHTML=foods.map(f=>{
+    const del=f.custom?'<button onclick="event.stopPropagation();deleteCustomFood(''+f.n+'')" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:0 3px;" title="Remove">&#215;</button>':'';
+    return '<div class="food-row'+(selectedFood&&selectedFood.n===f.n?' selected':'')+'" onclick="selectFood(this,''+f.n+'','+f.p+','+f.f+')">'
+      +'<div><div class="food-name">'+f.n+'</div><div class="food-per">per 100g</div></div>'
+      +'<div style="display:flex;gap:5px;align-items:center;"><span class="pill pill-p">'+f.p+'g P</span><span class="pill pill-f">'+f.f+'g F</span>'+del+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function selectFood(el,name,p,f){
@@ -1232,10 +1225,13 @@ function addFromBarcode(){
   const entries=getEntries();
   entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,serving:100,meal:activeMeal});
   saveEntries(entries);
-  addBarcodeToMyFoods(barcodeData.name,barcodeData.p,barcodeData.f);
-  closeModal('barcode');renderToday();
-  toast(barcodeData.name+' added \u2713 (saved to My Foods)');
-  showSaveBar();barcodeData=null;
+  // Auto-save to My Foods
+  var cf=getCustomFoods();
+  if(!cf.find(function(x){return x.n.toLowerCase()===barcodeData.name.toLowerCase();})){
+    cf.push({n:barcodeData.name,p:barcodeData.p,f:barcodeData.f,custom:true,barcode:true});
+    saveCustomFoods(cf);renderCats();
+  }
+  closeModal('barcode');renderToday();toast(barcodeData.name+' added ✓ (saved to My Foods)');showSaveBar();barcodeData=null;
 }
 
 function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
@@ -1269,42 +1265,38 @@ function setView(view,el){
   if(view==='goals')renderGoalsForm();
 }
 
-/* ── MY FOODS (CUSTOM FOOD LIBRARY) ── */
+/* ── IMPORT DATA ── */
+/* ── MY FOODS ── */
 function saveCustomFood(){
-  const name=document.getElementById('cfName').value.trim();
-  const p=parseFloat(document.getElementById('cfP').value)||0;
-  const f=parseFloat(document.getElementById('cfF').value)||0;
+  var name=document.getElementById('cfName').value.trim();
+  var p=parseFloat(document.getElementById('cfP').value)||0;
+  var f=parseFloat(document.getElementById('cfF').value)||0;
   if(!name){toast('Enter a food name');return;}
   if(!p&&!f){toast('Enter protein or fibre value');return;}
-  const custom=getCustomFoods();
-  // Don't add duplicates
-  if(custom.find(f=>f.n.toLowerCase()===name.toLowerCase())){
-    toast('Already in My Foods');return;
-  }
-  custom.push({n:name,p,f,custom:true,added:Date.now()});
+  var custom=getCustomFoods();
+  if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
+  custom.push({n:name,p:p,f:f,custom:true,added:Date.now()});
   saveCustomFoods(custom);
   closeModal('customFood');
   renderCats();
-  toast(name+' saved to My Foods \u2713');
+  toast(name+' saved to My Foods ✓');
 }
-
-function addBarcodeToMyFoods(name,p,f){
-  const custom=getCustomFoods();
-  if(custom.find(c=>c.n.toLowerCase()===name.toLowerCase())) return; // already saved
-  custom.push({n:name,p,f,custom:true,barcode:true,added:Date.now()});
-  saveCustomFoods(custom);
-  renderCats();
-}
-
-function deleteCustomFood(el,name){
-  const custom=getCustomFoods().filter(f=>f.n!==name);
-  saveCustomFoods(custom);
+function deleteCustomFood(name){
+  saveCustomFoods(getCustomFoods().filter(function(f){return f.n!==name;}));
   renderCats();
   renderFoodList(getFoodsForCat(currentCat));
   toast('Removed from My Foods');
 }
+function exportData(){
+  var data={entries:getEntries(),goals:getGoals(),customFoods:getCustomFoods(),exported:new Date().toISOString()};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  var dk=todayKey();
+  a.download='fibecheck-backup-'+dk+'.json';
+  a.click();
+}
 
-/* ── IMPORT DATA ── */
 function importData(evt){
   const file=evt.target.files[0];
   if(!file)return;
@@ -1320,12 +1312,6 @@ function importData(evt){
       const merged=[...existing,...newEntries].sort((a,b)=>a.ts-b.ts);
       saveEntries(merged);
       if(data.goals) saveGoalsData(data.goals);
-      if(data.customFoods&&Array.isArray(data.customFoods)){
-        const existingCustom=getCustomFoods();
-        const existingNames=new Set(existingCustom.map(f=>f.n.toLowerCase()));
-        const newCustom=data.customFoods.filter(f=>!existingNames.has(f.n.toLowerCase()));
-        saveCustomFoods([...existingCustom,...newCustom]);
-      }
       const status=document.getElementById('importStatus');
       status.textContent='✓ Imported '+newEntries.length+' entries successfully!';
       status.style.display='block';
