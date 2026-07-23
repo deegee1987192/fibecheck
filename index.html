@@ -148,6 +148,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .barcode-row .text-input{flex:1;}
 .view{display:none;}
 .view.active{display:block;}
+.meal-btn{flex:1;padding:6px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.meal-btn.active{background:var(--surface2);border-color:var(--amber-border);color:var(--amber-bright);}
 </style>
 </head>
 <body>
@@ -167,6 +169,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <!-- TODAY -->
 <div id="view-today" class="view active">
+
+  <!-- Date bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
+    <button onclick="shiftDay(-1)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:7px 12px;font-size:16px;cursor:pointer;line-height:1;">‹</button>
+    <div style="flex:1;text-align:center;">
+      <div id="dayLabel" style="font-size:14px;font-weight:700;color:var(--text);"></div>
+      <div id="dayDate" style="font-size:11px;color:var(--muted);margin-top:1px;"></div>
+    </div>
+    <button onclick="shiftDay(1)" id="nextDayBtn" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:7px 12px;font-size:16px;cursor:pointer;line-height:1;">›</button>
+  </div>
+
   <div class="score-row">
     <div class="score-card protein">
       <div class="score-macro">Protein</div>
@@ -192,9 +205,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <button class="action-btn scan" onclick="openModal('barcode')">&#9640; Scan Barcode</button>
         <button class="action-btn ai" onclick="aiEstimate()" id="aiBtn">✦ AI Estimate</button>
       </div>
+      <!-- Meal selector -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="meal-btn active" onclick="setMeal('Breakfast',this)">🌅 Breakfast</button>
+        <button class="meal-btn" onclick="setMeal('Lunch',this)">☀️ Lunch</button>
+        <button class="meal-btn" onclick="setMeal('Dinner',this)">🌙 Dinner</button>
+        <button class="meal-btn" onclick="setMeal('Snack',this)">🍎 Snack</button>
+      </div>
       <div class="search-wrap">
         <span class="search-icon">&#9906;</span>
-        <input class="search-input" id="searchInput" type="text" placeholder="Search 700+ foods or type anything…" autocomplete="off" oninput="filterFoods()"/>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search 800+ foods or type anything…" autocomplete="off" oninput="filterFoods()"/>
       </div>
       <div class="cat-row" id="catRow"></div>
       <div class="food-list" id="foodList"></div>
@@ -212,14 +232,19 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <input class="serving-input" id="servingInput" type="number" value="100" min="1" max="2000"/>
         <span class="serving-unit">g</span>
       </div>
-      <button class="add-btn" onclick="addFood()">+ Add to today</button>
+      <button class="add-btn" onclick="addFood()">+ Add entry</button>
     </div>
+  </div>
+
+  <!-- Save indicator -->
+  <div id="saveBar" style="display:none;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--green-bright);font-weight:600;">
+    ✓ Saved · <span id="saveCount"></span>
   </div>
 
   <div class="card">
     <div class="card-head">
-      <span class="card-title">Today's log</span>
-      <button onclick="clearToday()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;">Clear day</button>
+      <span class="card-title" id="logTitle">Today's log</span>
+      <button onclick="clearDay()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;">Clear day</button>
     </div>
     <div id="logList" class="log-list"><div class="empty">Nothing logged yet.</div></div>
   </div>
@@ -653,6 +678,59 @@ Nuts:[
   {n:"Nut-based cheese (cashew)",p:7.0,f:3.0},{n:"Brazil nut oil",p:0,f:0},
   {n:"Walnut oil",p:0,f:0},{n:"Peanut oil",p:0,f:0},
   {n:"Almond extract (pure)",p:0,f:0},{n:"Peanut butter (commercial, smooth)",p:22.5,f:6.0}
+],
+Fruit:[
+  {n:"Apple (raw, with skin)",p:0.3,f:2.4},{n:"Apple (raw, without skin)",p:0.3,f:1.3},
+  {n:"Applesauce (unsweetened)",p:0.2,f:1.2},{n:"Dried apple rings",p:0.9,f:8.7},
+  {n:"Banana (raw)",p:1.1,f:2.6},{n:"Banana (overripe)",p:1.1,f:2.4},
+  {n:"Plantain (raw)",p:1.3,f:2.3},{n:"Dried banana chips",p:2.3,f:7.7},
+  {n:"Orange (navel, raw)",p:0.9,f:2.2},{n:"Orange (blood, raw)",p:0.8,f:1.5},
+  {n:"Mandarin / clementine (raw)",p:0.8,f:1.7},{n:"Grapefruit (raw, pink)",p:0.8,f:1.6},
+  {n:"Lemon (raw, without peel)",p:1.1,f:2.8},{n:"Lime (raw)",p:0.7,f:2.8},
+  {n:"Tangerine (raw)",p:0.8,f:1.8},{n:"Kumquat (raw)",p:1.9,f:6.5},
+  {n:"Pomelo (raw)",p:0.8,f:1.0},{n:"Yuzu (raw)",p:0.8,f:1.8},
+  {n:"Strawberries (raw)",p:0.7,f:2.0},{n:"Strawberries (frozen, unsweetened)",p:0.5,f:1.8},
+  {n:"Blueberries (raw)",p:0.7,f:2.4},{n:"Blueberries (frozen)",p:0.6,f:2.0},
+  {n:"Raspberries (raw)",p:1.2,f:6.5},{n:"Raspberries (frozen)",p:1.0,f:5.9},
+  {n:"Blackberries (raw)",p:1.4,f:5.3},{n:"Blackberries (frozen)",p:1.2,f:4.9},
+  {n:"Cranberries (raw)",p:0.4,f:4.6},{n:"Dried cranberries (sweetened)",p:0.1,f:5.3},
+  {n:"Cherries, sweet (raw)",p:1.1,f:1.6},{n:"Cherries, sour (raw)",p:1.0,f:1.6},
+  {n:"Dried cherries (unsweetened)",p:3.6,f:5.0},{n:"Maraschino cherries",p:0.3,f:0.9},
+  {n:"Grapes, red/purple (raw)",p:0.7,f:0.9},{n:"Grapes, green/white (raw)",p:0.7,f:0.9},
+  {n:"Raisins (seedless)",p:3.1,f:3.7},{n:"Sultanas / golden raisins",p:2.9,f:2.7},
+  {n:"Currants, black (raw)",p:1.4,f:4.3},{n:"Currants, dried",p:3.8,f:6.8},
+  {n:"Watermelon (raw)",p:0.6,f:0.4},{n:"Cantaloupe / rockmelon (raw)",p:0.8,f:0.9},
+  {n:"Honeydew melon (raw)",p:0.5,f:0.8},{n:"Casaba melon (raw)",p:0.9,f:0.8},
+  {n:"Pineapple (raw)",p:0.5,f:1.4},{n:"Pineapple (canned in juice)",p:0.4,f:0.9},
+  {n:"Pineapple (dried)",p:2.1,f:8.3},{n:"Mango (raw)",p:0.8,f:1.6},
+  {n:"Mango (dried)",p:2.5,f:9.9},{n:"Mango (frozen chunks)",p:0.5,f:1.4},
+  {n:"Papaya (raw)",p:0.5,f:1.7},{n:"Papaya (dried)",p:1.3,f:10.8},
+  {n:"Guava (raw)",p:2.6,f:5.4},{n:"Guava (dried)",p:7.3,f:17.0},
+  {n:"Passion fruit (raw)",p:2.2,f:10.4},{n:"Passion fruit juice",p:0.4,f:0.2},
+  {n:"Kiwi fruit (raw, green)",p:1.1,f:3.0},{n:"Kiwi fruit (raw, gold)",p:1.0,f:1.4},
+  {n:"Kiwi (dried)",p:3.5,f:9.0},{n:"Pear (raw, with skin)",p:0.4,f:3.1},
+  {n:"Pear (canned in juice)",p:0.3,f:1.6},{n:"Dried pear",p:1.9,f:7.5},
+  {n:"Peach (raw)",p:0.9,f:1.5},{n:"Peach (canned in juice)",p:0.5,f:1.0},
+  {n:"Dried peach (unsweetened)",p:3.6,f:8.2},{n:"Nectarine (raw)",p:1.1,f:1.7},
+  {n:"Plum (raw)",p:0.7,f:1.4},{n:"Prunes / dried plums",p:2.2,f:7.1},
+  {n:"Plum (canned in juice)",p:0.5,f:1.0},{n:"Apricot (raw)",p:1.4,f:2.0},
+  {n:"Dried apricots (unsulfured)",p:3.4,f:7.3},{n:"Apricot (canned in juice)",p:0.6,f:1.1},
+  {n:"Fig (raw)",p:0.8,f:2.9},{n:"Dried figs",p:3.3,f:9.8},
+  {n:"Date, Medjool (raw)",p:1.8,f:6.7},{n:"Date, Deglet Noor (dried)",p:2.5,f:8.0},
+  {n:"Pomegranate (raw arils)",p:1.7,f:4.0},{n:"Pomegranate juice (unsweetened)",p:0.2,f:0.1},
+  {n:"Lychee (raw)",p:0.8,f:1.3},{n:"Lychee (canned in syrup, drained)",p:0.7,f:1.3},
+  {n:"Longan (raw)",p:1.3,f:1.1},{n:"Rambutan (canned)",p:0.7,f:0.9},
+  {n:"Dragon fruit / pitaya (raw, red)",p:1.1,f:2.9},{n:"Dragon fruit (raw, white)",p:1.2,f:2.9},
+  {n:"Star fruit / carambola (raw)",p:1.0,f:2.8},{n:"Jackfruit (ripe, raw)",p:1.7,f:1.5},
+  {n:"Durian (raw)",p:1.5,f:3.8},{n:"Persimmon (raw, Hachiya)",p:0.6,f:3.6},
+  {n:"Persimmon (raw, Fuyu)",p:0.6,f:3.6},{n:"Quince (raw)",p:0.4,f:1.9},
+  {n:"Breadfruit (raw)",p:1.1,f:4.9},{n:"Tamarind (raw pulp)",p:2.8,f:5.1},
+  {n:"Coconut meat (raw)",p:3.3,f:9.0},{n:"Coconut meat (dried, unsweetened)",p:6.9,f:16.3},
+  {n:"Açaí (frozen pulp, unsweetened)",p:1.5,f:2.5},{n:"Elderberries (raw)",p:0.7,f:7.0},
+  {n:"Gooseberries (raw)",p:0.9,f:4.3},{n:"Mulberries (raw)",p:1.4,f:1.7},
+  {n:"Boysenberries (frozen)",p:1.1,f:5.3},{n:"Loganberries (frozen)",p:1.5,f:5.9},
+  {n:"Goji berries (dried)",p:14.3,f:7.4},{n:"Barberries (dried)",p:7.4,f:7.0},
+  {n:"Sea buckthorn berries (raw)",p:1.2,f:3.6},{n:"Feijoa / pineapple guava (raw)",p:1.2,f:6.4}
 ]
 };
 
@@ -723,6 +801,36 @@ function selectFood(el,name,p,f){
   document.getElementById('manualEntry').style.display='none';
 }
 
+/* ── DATE NAVIGATION ── */
+let activeDate=todayKey();
+let activeMeal='Breakfast';
+
+function setMeal(meal,el){
+  activeMeal=meal;
+  document.querySelectorAll('.meal-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function shiftDay(dir){
+  const d=new Date(activeDate+'T12:00:00');
+  d.setDate(d.getDate()+dir);
+  const newDate=d.toISOString().slice(0,10);
+  if(newDate>todayKey()) return; // can't go to future
+  activeDate=newDate;
+  renderDayHeader();
+  renderToday();
+}
+
+function renderDayHeader(){
+  const isToday=activeDate===todayKey();
+  const d=new Date(activeDate+'T12:00:00');
+  document.getElementById('dayLabel').textContent=isToday?'Today':activeDate===new Date(Date.now()-86400000).toISOString().slice(0,10)?'Yesterday':d.toLocaleDateString('en-CA',{weekday:'long'});
+  document.getElementById('dayDate').textContent=d.toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('nextDayBtn').style.opacity=isToday?'0.3':'1';
+  document.getElementById('nextDayBtn').style.pointerEvents=isToday?'none':'auto';
+  document.getElementById('logTitle').textContent=isToday?"Today's log":`Log for ${d.toLocaleDateString('en-CA',{month:'short',day:'numeric'})}`;
+}
+
 function addFood(){
   const serving=parseFloat(document.getElementById('servingInput').value)||100;
   let name,p,f;
@@ -736,7 +844,7 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:todayKey(),ts:Date.now(),name,p,f,serving});
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,serving,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
@@ -745,11 +853,23 @@ function addFood(){
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(FOODS[currentCat]);
-  renderToday();toast(`${name} added ✓`);
+  renderToday();
+  showSaveBar();
+  toast(`${name} added ✓`);
 }
 
+function showSaveBar(){
+  const entries=getEntries().filter(e=>e.date===activeDate);
+  const bar=document.getElementById('saveBar');
+  document.getElementById('saveCount').textContent=`${entries.length} item${entries.length!==1?'s':''} logged · ${new Date().toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'})}`;
+  bar.style.display='block';
+}
+
+const MEAL_ORDER=['Breakfast','Lunch','Dinner','Snack'];
+const MEAL_ICONS={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍎'};
+
 function renderToday(){
-  const entries=getEntries().filter(e=>e.date===todayKey());
+  const entries=getEntries().filter(e=>e.date===activeDate);
   const goals=getGoals();
   const totalP=r1(entries.reduce((s,e)=>s+(e.p||0),0));
   const totalF=r1(entries.reduce((s,e)=>s+(e.f||0),0));
@@ -760,18 +880,47 @@ function renderToday(){
   document.getElementById('barP').style.width=Math.min(100,totalP/goals.p*100)+'%';
   document.getElementById('barF').style.width=Math.min(100,totalF/goals.f*100)+'%';
   const list=document.getElementById('logList');
-  if(!entries.length){list.innerHTML='<div class="empty">Nothing logged yet.</div>';return;}
-  list.innerHTML=[...entries].reverse().map(e=>`
-    <div class="log-item">
-      <div class="log-dot" style="background:${e.p>=e.f?'var(--green-bright)':'var(--amber-bright)'}"></div>
-      <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.serving||100}g · ${fmtTime(e.ts)}</div></div>
-      <div class="log-pills">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''} ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div>
-      <button class="del-btn" onclick="deleteEntry('${e.id}')">×</button>
-    </div>`).join('');
+  if(!entries.length){
+    list.innerHTML='<div class="empty">Nothing logged yet — add food above.</div>';
+    document.getElementById('saveBar').style.display='none';
+    return;
+  }
+  // Group by meal
+  const byMeal={};
+  entries.forEach(e=>{
+    const m=e.meal||'Snack';
+    if(!byMeal[m])byMeal[m]=[];
+    byMeal[m].push(e);
+  });
+  let html='';
+  MEAL_ORDER.forEach(meal=>{
+    if(!byMeal[meal])return;
+    const items=byMeal[meal];
+    const mP=r1(items.reduce((s,e)=>s+(e.p||0),0));
+    const mF=r1(items.reduce((s,e)=>s+(e.f||0),0));
+    html+=`<div style="padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">${MEAL_ICONS[meal]} ${meal}</span>
+      <span style="display:flex;gap:5px;"><span class="pill pill-p">${mP}g P</span><span class="pill pill-f">${mF}g F</span></span>
+    </div>`;
+    items.slice().reverse().forEach(e=>{
+      html+=`<div class="log-item">
+        <div class="log-dot" style="background:${e.p>=e.f?'var(--green-bright)':'var(--amber-bright)'}"></div>
+        <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.serving||100}g · ${fmtTime(e.ts)}</div></div>
+        <div class="log-pills">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''} ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div>
+        <button class="del-btn" onclick="deleteEntry('${e.id}')">×</button>
+      </div>`;
+    });
+  });
+  list.innerHTML=html;
+  showSaveBar();
 }
 
 function deleteEntry(id){saveEntries(getEntries().filter(e=>e.id!==id));renderToday();}
-function clearToday(){if(!confirm('Clear today?'))return;saveEntries(getEntries().filter(e=>e.date!==todayKey()));renderToday();}
+function clearDay(){
+  if(!confirm(`Clear all entries for ${activeDate===todayKey()?'today':activeDate}?`))return;
+  saveEntries(getEntries().filter(e=>e.date!==activeDate));
+  renderToday();
+}
 
 function setPeriod(p,el){
   currentPeriod=p;
@@ -924,8 +1073,8 @@ async function lookupBarcode(){
 function addFromBarcode(){
   if(!barcodeData)return;
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:todayKey(),ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,serving:100});
-  saveEntries(entries);closeModal('barcode');renderToday();toast(`${barcodeData.name} added ✓`);barcodeData=null;
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,serving:100,meal:activeMeal});
+  saveEntries(entries);closeModal('barcode');renderToday();toast(`${barcodeData.name} added ✓`);showSaveBar();barcodeData=null;
 }
 
 function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
@@ -964,7 +1113,7 @@ document.addEventListener('keydown',e=>{
 });
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 
-renderCats();renderFoodList(FOODS[currentCat]);renderToday();
+renderCats();renderFoodList(FOODS[currentCat]);renderDayHeader();renderToday();
 </script>
 </body>
 </html>
