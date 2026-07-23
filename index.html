@@ -742,7 +742,7 @@ function getEntries(){try{return JSON.parse(localStorage.getItem(K_ENTRIES))||[]
 function saveEntries(e){localStorage.setItem(K_ENTRIES,JSON.stringify(e));}
 function getGoals(){try{return JSON.parse(localStorage.getItem(K_GOALS))||{p:150,f:30};}catch{return{p:150,f:30};}}
 function saveGoalsData(g){localStorage.setItem(K_GOALS,JSON.stringify(g));}
-function todayKey(){return new Date().toISOString().slice(0,10);}
+function todayKey(){return new Date().function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };}
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'});}
 function fmtDate(d){
   if(d===todayKey())return'Today';
@@ -814,7 +814,7 @@ function setMeal(meal,el){
 function shiftDay(dir){
   const d=new Date(activeDate+'T12:00:00');
   d.setDate(d.getDate()+dir);
-  const newDate=d.toISOString().slice(0,10);
+  const newDate=d.function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   if(newDate>todayKey()) return; // can't go to future
   activeDate=newDate;
   renderDayHeader();
@@ -824,7 +824,7 @@ function shiftDay(dir){
 function renderDayHeader(){
   const isToday=activeDate===todayKey();
   const d=new Date(activeDate+'T12:00:00');
-  document.getElementById('dayLabel').textContent=isToday?'Today':activeDate===new Date(Date.now()-86400000).toISOString().slice(0,10)?'Yesterday':d.toLocaleDateString('en-CA',{weekday:'long'});
+  document.getElementById('dayLabel').textContent=isToday?'Today':activeDate===new Date(Date.now()-86400000).function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }?'Yesterday':d.toLocaleDateString('en-CA',{weekday:'long'});
   document.getElementById('dayDate').textContent=d.toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'});
   document.getElementById('nextDayBtn').style.opacity=isToday?'0.3':'1';
   document.getElementById('nextDayBtn').style.pointerEvents=isToday?'none':'auto';
@@ -930,8 +930,8 @@ function setPeriod(p,el){
 
 function dateFrom(period){
   const now=new Date();
-  if(period==='week'){const d=new Date(now);d.setDate(now.getDate()-now.getDay());return d.toISOString().slice(0,10);}
-  if(period==='month')return new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+  if(period==='week'){const d=new Date(now);d.setDate(now.getDate()-now.getDay());return d.function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };}
+  if(period==='month')return new Date(now.getFullYear(),now.getMonth(),1).function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   return'2020-01-01';
 }
 
