@@ -229,8 +229,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="add-strip">
       <div class="serving-wrap">
         <span class="serving-label">Serving</span>
-        <input class="serving-input" id="servingInput" type="number" value="100" min="1" max="2000"/>
-        <span class="serving-unit">g</span>
+        <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
+        <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
+          <option value="g">g</option>
+          <option value="oz">oz</option>
+          <option value="lbs">lbs</option>
+          <option value="tbsp">tbsp</option>
+          <option value="tsp">tsp</option>
+        </select>
       </div>
       <button class="add-btn" onclick="addFood()">+ Add entry</button>
     </div>
@@ -801,6 +807,17 @@ function selectFood(el,name,p,f){
   document.getElementById('manualEntry').style.display='none';
 }
 
+/* ── UNIT CONVERSION ── */
+function toGrams(amount,unit){
+  switch(unit){
+    case 'oz':  return amount*28.3495;
+    case 'lbs': return amount*453.592;
+    case 'tbsp':return amount*15;
+    case 'tsp': return amount*5;
+    default:    return amount; // grams
+  }
+}
+
 /* ── DATE NAVIGATION ── */
 let activeDate=todayKey();
 let activeMeal='Breakfast';
@@ -832,10 +849,13 @@ function renderDayHeader(){
 }
 
 function addFood(){
-  const serving=parseFloat(document.getElementById('servingInput').value)||100;
+  const servingRaw=parseFloat(document.getElementById('servingInput').value)||100;
+  const unit=document.getElementById('servingUnit').value;
+  const servingG=r1(toGrams(servingRaw,unit));
+  const servingLabel=servingRaw+unit;
   let name,p,f;
   if(selectedFood){
-    name=selectedFood.n;p=r1(selectedFood.p*serving/100);f=r1(selectedFood.f*serving/100);
+    name=selectedFood.n;p=r1(selectedFood.p*servingG/100);f=r1(selectedFood.f*servingG/100);
   } else {
     name=document.getElementById('searchInput').value.trim();
     p=parseFloat(document.getElementById('manualP').value)||0;
@@ -844,18 +864,19 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,serving,meal:activeMeal});
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,serving:servingG,servingLabel,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
   document.getElementById('manualF').value='';
   document.getElementById('servingInput').value='100';
+  document.getElementById('servingUnit').value='g';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(FOODS[currentCat]);
   renderToday();
   showSaveBar();
-  toast(`${name} added ✓`);
+  toast(name+' added \u2713');
 }
 
 function showSaveBar(){
@@ -905,7 +926,7 @@ function renderToday(){
     items.slice().reverse().forEach(e=>{
       html+=`<div class="log-item">
         <div class="log-dot" style="background:${e.p>=e.f?'var(--green-bright)':'var(--amber-bright)'}"></div>
-        <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.serving||100}g · ${fmtTime(e.ts)}</div></div>
+        <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.servingLabel||((e.serving||100)+'g')} · ${fmtTime(e.ts)}</div></div>
         <div class="log-pills">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''} ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div>
         <button class="del-btn" onclick="deleteEntry('${e.id}')">×</button>
       </div>`;
@@ -993,54 +1014,54 @@ async function aiEstimate(){
   finally{btn.textContent='✦ AI Estimate';btn.disabled=false;}
 }
 
-/* ── BARCODE CAMERA SCANNER ── */
-let scannerStream=null,scannerInterval=null,barcodeDetector=null;
+/* ── BARCODE CAMERA SCANNER (ZXing) ── */
+let scannerStream=null,scannerActive=false,zxingReader=null;
 
 async function startScanner(){
   const status=document.getElementById('scannerStatus');
   const wrap=document.getElementById('scannerWrap');
   const btn=document.getElementById('startScanBtn');
   status.textContent='Starting camera…';
+  btn.style.display='none';
+  wrap.style.display='block';
   try{
-    // Try BarcodeDetector API first (Chrome on Android/desktop)
-    if('BarcodeDetector' in window){
-      barcodeDetector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']});
-    }
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});
     scannerStream=stream;
     const video=document.getElementById('scannerVideo');
     video.srcObject=stream;
-    wrap.style.display='block';
-    btn.style.display='none';
-    status.textContent='Point at a barcode…';
-    if(barcodeDetector){
-      scannerInterval=setInterval(async()=>{
-        if(video.readyState===video.HAVE_ENOUGH_DATA){
-          try{
-            const codes=await barcodeDetector.detect(video);
-            if(codes.length>0){
-              const code=codes[0].rawValue;
-              stopScanner();
-              document.getElementById('barcodeInput').value=code;
-              status.textContent=`Barcode detected: ${code}`;
-              lookupBarcode();
-            }
-          }catch(e){}
-        }
-      },300);
-    } else {
-      // Fallback: no BarcodeDetector — just show camera, user reads number
-      status.textContent='Camera open — read the barcode number and type it below, then tap Look up.';
+    await video.play();
+    scannerActive=true;
+    status.textContent='Scanning… point camera at barcode';
+    // Load ZXing dynamically
+    if(!window.ZXing){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src='https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js';
+        s.onload=resolve;s.onerror=reject;
+        document.head.appendChild(s);
+      });
     }
+    zxingReader=new ZXing.BrowserMultiFormatReader();
+    zxingReader.decodeFromVideoElement(video,(result,err)=>{
+      if(result&&scannerActive){
+        scannerActive=false;
+        const code=result.getText();
+        stopScanner();
+        document.getElementById('barcodeInput').value=code;
+        status.textContent='Barcode found: '+code;
+        lookupBarcode();
+      }
+    });
   }catch(e){
-    status.textContent='Camera access denied. Type the barcode number below instead.';
+    status.textContent='Camera not available — type the barcode number below.';
     wrap.style.display='none';
     btn.style.display='block';
   }
 }
 
 function stopScanner(){
-  if(scannerInterval){clearInterval(scannerInterval);scannerInterval=null;}
+  scannerActive=false;
+  if(zxingReader){try{zxingReader.reset();}catch(e){}zxingReader=null;}
   if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}
   document.getElementById('scannerWrap').style.display='none';
   document.getElementById('startScanBtn').style.display='block';
