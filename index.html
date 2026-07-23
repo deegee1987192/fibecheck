@@ -195,6 +195,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div class="action-row">
         <button class="action-btn scan" onclick="openModal('barcode')">&#9640; Scan Barcode</button>
         <button class="action-btn ai" onclick="aiEstimate()" id="aiBtn">✦ AI Estimate</button>
+        <button class="action-btn" onclick="openModal('customFood')" style="background:#eff6ff;border-color:#bfdbfe;color:#2563eb;">+ My Foods</button>
       </div>
       <!-- Meal selector -->
       <div style="display:flex;gap:6px;margin-bottom:12px;">
@@ -273,8 +274,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div class="card">
     <div class="card-head"><span class="card-title">Data</span></div>
     <div class="card-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">All data is stored locally on this device. Nothing is sent to a server.</p>
-      <button class="modal-btn secondary" onclick="exportData()" style="width:auto;padding:8px 16px;">Export JSON backup</button>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">All data is stored locally on this device. Export regularly to avoid losing entries when switching browsers or devices.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="modal-btn secondary" onclick="exportData()" style="width:auto;padding:8px 16px;flex:1;">&#8595; Export backup</button>
+        <button class="modal-btn secondary" onclick="document.getElementById('importFile').click()" style="width:auto;padding:8px 16px;flex:1;border-color:var(--amber-border);color:var(--amber);">&#8593; Import backup</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)"/>
+      <div id="importStatus" style="font-size:12px;color:var(--green);font-weight:600;margin-top:8px;display:none;"></div>
     </div>
   </div>
 </div>
@@ -313,6 +319,61 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 </div>
 
 </div><!-- /scroll-area -->
+
+<!-- CUSTOM FOOD MODAL -->
+<div class="modal-overlay" id="customFoodModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">+ Add to My Foods</span>
+      <button class="modal-close" onclick="closeModal('customFood')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Save a food to your personal list so you can quickly pick it any time.</p>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
+        <input class="text-input" id="cfName" type="text" placeholder="e.g. My protein shake"/>
+      </div>
+      <div class="manual-grid" style="margin-bottom:16px;">
+        <div class="field-wrap p"><label>Protein per 100g</label><input class="num-input" id="cfP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
+        <div class="field-wrap f"><label>Fibre per 100g</label><input class="num-input" id="cfF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
+      </div>
+      <button class="modal-btn primary" onclick="saveCustomFood()" style="margin-bottom:8px;">Save to My Foods</button>
+      <button class="modal-btn secondary" onclick="closeModal('customFood')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ENTRY MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Edit Entry</span>
+      <button class="modal-close" onclick="closeModal('edit')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
+        <input class="text-input" id="editName" type="text" placeholder="Food name"/>
+      </div>
+      <div class="manual-grid" style="margin-bottom:10px;">
+        <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="editP" type="number" min="0" max="500" step="0.5"/></div>
+        <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="editF" type="number" min="0" max="200" step="0.5"/></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Meal</label>
+        <div style="display:flex;gap:6px;">
+          <button class="meal-btn" onclick="setEditMeal('Breakfast',this)">&#127749; Breakfast</button>
+          <button class="meal-btn" onclick="setEditMeal('Lunch',this)">&#9728;&#65039; Lunch</button>
+          <button class="meal-btn" onclick="setEditMeal('Dinner',this)">&#127769; Dinner</button>
+          <button class="meal-btn" onclick="setEditMeal('Snack',this)">&#127822; Snack</button>
+        </div>
+      </div>
+      <button class="modal-btn primary" onclick="saveEdit()" style="margin-bottom:8px;">Save changes</button>
+      <button class="modal-btn secondary" onclick="closeModal('edit')">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- BOTTOM TAB NAV -->
 <nav class="tab-nav">
@@ -741,13 +802,21 @@ Fruit:[
 };
 
 const ALL_CATS=Object.keys(FOODS);
+const MY_FOODS_CAT='My Foods';
 let currentCat='Meat',selectedFood=null,currentPeriod='week',barcodeData=null;
 
-const K_ENTRIES='fibecheck_entries',K_GOALS='fibecheck_goals';
+function getFoodsForCat(cat){
+  if(cat===MY_FOODS_CAT) return getCustomFoods();
+  return FOODS[cat]||[];
+}
+
+const K_ENTRIES='fibecheck_entries',K_GOALS='fibecheck_goals',K_CUSTOM='fibecheck_custom';
 function getEntries(){try{return JSON.parse(localStorage.getItem(K_ENTRIES))||[];}catch{return[];}}
 function saveEntries(e){localStorage.setItem(K_ENTRIES,JSON.stringify(e));}
 function getGoals(){try{return JSON.parse(localStorage.getItem(K_GOALS))||{p:150,f:30};}catch{return{p:150,f:30};}}
 function saveGoalsData(g){localStorage.setItem(K_GOALS,JSON.stringify(g));}
+function getCustomFoods(){try{return JSON.parse(localStorage.getItem(K_CUSTOM))||[];}catch{return[];}}
+function saveCustomFoods(f){localStorage.setItem(K_CUSTOM,JSON.stringify(f));}
 function todayKey(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'});}
 function fmtDate(d){
@@ -760,9 +829,12 @@ function r1(n){return Math.round(n*10)/10;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function renderCats(){
-  document.getElementById('catRow').innerHTML=ALL_CATS.map(c=>
-    `<button class="cat-btn${c===currentCat?' active':''}" onclick="setCat('${c}',this)">${c}</button>`
-  ).join('');
+  const custom=getCustomFoods();
+  const cats=[...ALL_CATS,MY_FOODS_CAT];
+  document.getElementById('catRow').innerHTML=cats.map(c=>{
+    const badge=c===MY_FOODS_CAT&&custom.length?' ('+custom.length+')':'';
+    return `<button class="cat-btn${c===currentCat?' active':''}" onclick="setCat('${c}',this)">${c}${badge}</button>`;
+  }).join('');
 }
 
 function setCat(cat,el){
@@ -771,7 +843,7 @@ function setCat(cat,el){
   el.classList.add('active');
   document.getElementById('searchInput').value='';
   document.getElementById('manualEntry').style.display='none';
-  renderFoodList(FOODS[currentCat]);
+  renderFoodList(getFoodsForCat(cat));
 }
 
 function filterFoods(){
@@ -779,23 +851,31 @@ function filterFoods(){
   if(q.length>1){
     const results=[];
     ALL_CATS.forEach(cat=>FOODS[cat].forEach(f=>{if(f.n.toLowerCase().includes(q))results.push(f);}));
+    getCustomFoods().forEach(f=>{if(f.n.toLowerCase().includes(q))results.push(f);});
     document.getElementById('manualEntry').style.display=results.length===0?'block':'none';
     renderFoodList(results);
   } else {
     document.getElementById('manualEntry').style.display='none';
-    renderFoodList(FOODS[currentCat]);
+    renderFoodList(getFoodsForCat(currentCat));
   }
 }
 
 function renderFoodList(foods){
+  const isMyFoods=currentCat===MY_FOODS_CAT;
   if(!foods||!foods.length){
-    document.getElementById('foodList').innerHTML='<div class="empty">No match — use manual entry below or try ✦ AI Estimate.</div>';
+    const msg=isMyFoods
+      ?'<div class="empty">No saved foods yet. Tap + Add to My Foods below or scan a barcode.</div>'
+      :'<div class="empty">No match — use manual entry or AI Estimate.</div>';
+    document.getElementById('foodList').innerHTML=msg;
     return;
   }
   document.getElementById('foodList').innerHTML=foods.map(f=>
     `<div class="food-row${selectedFood&&selectedFood.n===f.n?' selected':''}" onclick="selectFood(this,'${esc(f.n)}',${f.p},${f.f})">
       <div><div class="food-name">${esc(f.n)}</div><div class="food-per">per 100g</div></div>
-      <div style="display:flex;gap:5px;"><span class="pill pill-p">${f.p}g P</span><span class="pill pill-f">${f.f}g F</span></div>
+      <div style="display:flex;gap:5px;align-items:center;">
+        <span class="pill pill-p">${f.p}g P</span><span class="pill pill-f">${f.f}g F</span>
+        ${f.custom?`<button onclick="event.stopPropagation();deleteCustomFood(this,'${esc(f.n)}')" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 3px;" title="Remove from My Foods">&#215;</button>`:''}
+      </div>
     </div>`
   ).join('');
 }
@@ -873,7 +953,7 @@ function addFood(){
   document.getElementById('servingUnit').value='g';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
-  renderFoodList(FOODS[currentCat]);
+  renderFoodList(getFoodsForCat(currentCat));
   renderToday();
   showSaveBar();
   toast(name+' added \u2713');
@@ -928,7 +1008,8 @@ function renderToday(){
         <div class="log-dot" style="background:${e.p>=e.f?'var(--green-bright)':'var(--amber-bright)'}"></div>
         <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.servingLabel||((e.serving||100)+'g')} · ${fmtTime(e.ts)}</div></div>
         <div class="log-pills">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''} ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div>
-        <button class="del-btn" onclick="deleteEntry('${e.id}')">×</button>
+        <button class="del-btn" onclick="openEdit('${e.id}')" style="color:var(--muted);font-size:15px;" title="Edit">&#9998;</button>
+        <button class="del-btn" onclick="deleteEntry('${e.id}')" title="Delete">&#215;</button>
       </div>`;
     });
   });
@@ -1150,7 +1231,11 @@ function addFromBarcode(){
   if(!barcodeData)return;
   const entries=getEntries();
   entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,serving:100,meal:activeMeal});
-  saveEntries(entries);closeModal('barcode');renderToday();toast(`${barcodeData.name} added ✓`);showSaveBar();barcodeData=null;
+  saveEntries(entries);
+  addBarcodeToMyFoods(barcodeData.name,barcodeData.p,barcodeData.f);
+  closeModal('barcode');renderToday();
+  toast(barcodeData.name+' added \u2713 (saved to My Foods)');
+  showSaveBar();barcodeData=null;
 }
 
 function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
@@ -1163,6 +1248,16 @@ function closeModal(type){
     document.getElementById('scannerStatus').textContent='';
     barcodeData=null;
   }
+  if(type==='edit'){
+    document.getElementById('editName').value='';
+    document.getElementById('editP').value='';
+    document.getElementById('editF').value='';
+  }
+  if(type==='customFood'){
+    document.getElementById('cfName').value='';
+    document.getElementById('cfP').value='';
+    document.getElementById('cfF').value='';
+  }
 }
 
 function setView(view,el){
@@ -1174,8 +1269,118 @@ function setView(view,el){
   if(view==='goals')renderGoalsForm();
 }
 
-function exportData(){
-  const data={entries:getEntries(),goals:getGoals(),exported:new Date().toISOString()};
+/* ── MY FOODS (CUSTOM FOOD LIBRARY) ── */
+function saveCustomFood(){
+  const name=document.getElementById('cfName').value.trim();
+  const p=parseFloat(document.getElementById('cfP').value)||0;
+  const f=parseFloat(document.getElementById('cfF').value)||0;
+  if(!name){toast('Enter a food name');return;}
+  if(!p&&!f){toast('Enter protein or fibre value');return;}
+  const custom=getCustomFoods();
+  // Don't add duplicates
+  if(custom.find(f=>f.n.toLowerCase()===name.toLowerCase())){
+    toast('Already in My Foods');return;
+  }
+  custom.push({n:name,p,f,custom:true,added:Date.now()});
+  saveCustomFoods(custom);
+  closeModal('customFood');
+  renderCats();
+  toast(name+' saved to My Foods \u2713');
+}
+
+function addBarcodeToMyFoods(name,p,f){
+  const custom=getCustomFoods();
+  if(custom.find(c=>c.n.toLowerCase()===name.toLowerCase())) return; // already saved
+  custom.push({n:name,p,f,custom:true,barcode:true,added:Date.now()});
+  saveCustomFoods(custom);
+  renderCats();
+}
+
+function deleteCustomFood(el,name){
+  const custom=getCustomFoods().filter(f=>f.n!==name);
+  saveCustomFoods(custom);
+  renderCats();
+  renderFoodList(getFoodsForCat(currentCat));
+  toast('Removed from My Foods');
+}
+
+/* ── IMPORT DATA ── */
+function importData(evt){
+  const file=evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.entries||!Array.isArray(data.entries)) throw new Error('Invalid format');
+      const existing=getEntries();
+      // Merge — avoid duplicates by id
+      const existingIds=new Set(existing.map(e=>e.id));
+      const newEntries=data.entries.filter(e=>!existingIds.has(e.id));
+      const merged=[...existing,...newEntries].sort((a,b)=>a.ts-b.ts);
+      saveEntries(merged);
+      if(data.goals) saveGoalsData(data.goals);
+      if(data.customFoods&&Array.isArray(data.customFoods)){
+        const existingCustom=getCustomFoods();
+        const existingNames=new Set(existingCustom.map(f=>f.n.toLowerCase()));
+        const newCustom=data.customFoods.filter(f=>!existingNames.has(f.n.toLowerCase()));
+        saveCustomFoods([...existingCustom,...newCustom]);
+      }
+      const status=document.getElementById('importStatus');
+      status.textContent='✓ Imported '+newEntries.length+' entries successfully!';
+      status.style.display='block';
+      renderToday();
+      setTimeout(()=>{status.style.display='none';},4000);
+    }catch(err){
+      alert('Could not read backup file. Make sure it is a Fibe Check JSON export.');
+    }
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ── EDIT ENTRY ── */
+let editMeal='Breakfast';
+
+function openEdit(id){
+  const entry=getEntries().find(e=>e.id===id);
+  if(!entry)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('editName').value=entry.name;
+  document.getElementById('editP').value=entry.p||0;
+  document.getElementById('editF').value=entry.f||0;
+  editMeal=entry.meal||'Breakfast';
+  // Highlight correct meal button
+  document.querySelectorAll('#editModal .meal-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent.includes(editMeal));
+  });
+  document.getElementById('editModal').classList.add('open');
+}
+
+function setEditMeal(meal,el){
+  editMeal=meal;
+  document.querySelectorAll('#editModal .meal-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function saveEdit(){
+  const id=document.getElementById('editId').value;
+  const name=document.getElementById('editName').value.trim();
+  const p=parseFloat(document.getElementById('editP').value)||0;
+  const f=parseFloat(document.getElementById('editF').value)||0;
+  if(!name){toast('Enter a food name');return;}
+  const entries=getEntries().map(e=>{
+    if(e.id!==id)return e;
+    return {...e,name,p,f,meal:editMeal};
+  });
+  saveEntries(entries);
+  closeModal('edit');
+  renderToday();
+  toast('Entry updated ✓');
+}
+
+
+  const data={entries:getEntries(),goals:getGoals(),customFoods:getCustomFoods(),exported:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fibecheck-backup-${todayKey()}.json`;a.click();
 }
@@ -1185,11 +1390,11 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='searchInput')aiEstimate();
   if(e.key==='Enter'&&e.target.id==='barcodeInput')lookupBarcode();
-  if(e.key==='Escape'){closeModal('barcode');}
+  if(e.key==='Escape'){closeModal('barcode');closeModal('edit');closeModal('customFood');}
 });
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 
-renderCats();renderFoodList(FOODS[currentCat]);renderDayHeader();renderToday();
+renderCats();renderFoodList(getFoodsForCat(currentCat));renderDayHeader();renderToday();
 var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleDateString('en-CA',{month:'short',day:'numeric'});
 </script>
 </body>
