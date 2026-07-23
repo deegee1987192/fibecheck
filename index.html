@@ -1365,12 +1365,6 @@ function saveEdit(){
   toast('Entry updated ✓');
 }
 
-
-  const data={entries:getEntries(),goals:getGoals(),customFoods:getCustomFoods(),exported:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fibecheck-backup-${todayKey()}.json`;a.click();
-}
-
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
 document.addEventListener('keydown',e=>{
