@@ -392,10 +392,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════
-   FOOD DATABASE — USDA FoodData Central
+/* =======================================
+   FOOD DATABASE -- USDA FoodData Central
    All values per 100g
-═══════════════════════════════════════ */
+======================================= */
 const FOODS={
 Meat:[
   {n:"Chicken breast, skinless, roasted",p:31.0,f:0},{n:"Turkey breast, roasted",p:29.9,f:0},
@@ -425,7 +425,7 @@ Meat:[
   {n:"Bologna (beef)",p:12.0,f:0},{n:"Hot dog, beef",p:11.0,f:0},
   {n:"Sausage, Italian (cooked)",p:19.1,f:0},{n:"Sausage, breakfast (cooked)",p:16.6,f:0},
   {n:"Mortadella",p:14.3,f:0},{n:"Prosciutto",p:25.9,f:0},
-  {n:"Chicken liver (sautéed)",p:24.5,f:0},{n:"Beef heart (braised)",p:28.5,f:0},
+  {n:"Chicken liver (sauteed)",p:24.5,f:0},{n:"Beef heart (braised)",p:28.5,f:0},
   {n:"Beef kidney (braised)",p:26.2,f:0},{n:"Pork liver (braised)",p:26.0,f:0},
   {n:"Tongue, beef (simmered)",p:23.9,f:0},{n:"Tripe (simmered)",p:12.1,f:0},
   {n:"Ostrich (ground, cooked)",p:28.5,f:0},{n:"Alligator (cooked)",p:29.9,f:0},
@@ -437,7 +437,7 @@ Meat:[
   {n:"Rotisserie chicken, thigh",p:22.0,f:0},{n:"Lamb rack (roasted)",p:25.0,f:0},
   {n:"Pork back bacon (cooked)",p:21.9,f:0},{n:"Spam (classic)",p:12.0,f:0},
   {n:"Corned beef (canned)",p:24.9,f:0},{n:"Roast beef (deli)",p:21.5,f:0},
-  {n:"Veal cutlet (sautéed)",p:30.9,f:0},{n:"Chicken sausage (cooked)",p:18.7,f:0},
+  {n:"Veal cutlet (sauteed)",p:30.9,f:0},{n:"Chicken sausage (cooked)",p:18.7,f:0},
   {n:"Turkey sausage (cooked)",p:20.9,f:0},{n:"Pork rinds (fried)",p:61.3,f:0},
   {n:"Chicken nuggets (baked)",p:15.0,f:0.5},{n:"Beef patty (grilled)",p:25.8,f:0},
   {n:"Lamb chop (grilled)",p:24.6,f:0},{n:"Pork belly bacon",p:37.0,f:0},
@@ -510,7 +510,7 @@ Dairy:[
   {n:"Scrambled eggs (plain)",p:9.9,f:0},{n:"Cheddar cheese (aged)",p:24.9,f:0},
   {n:"Mozzarella (part skim)",p:21.6,f:0},{n:"Mozzarella (whole milk)",p:22.2,f:0},
   {n:"Swiss cheese",p:26.9,f:0},{n:"Parmesan (grated)",p:38.5,f:0},
-  {n:"Pecorino Romano",p:32.0,f:0},{n:"Gruyère",p:29.8,f:0},
+  {n:"Pecorino Romano",p:32.0,f:0},{n:"Gruyere",p:29.8,f:0},
   {n:"Gouda",p:24.9,f:0},{n:"Edam",p:25.0,f:0},
   {n:"Emmenthal",p:28.8,f:0},{n:"Provolone",p:25.6,f:0},
   {n:"Colby",p:23.8,f:0},{n:"Monterey Jack",p:24.5,f:0},
@@ -526,7 +526,7 @@ Dairy:[
   {n:"Whey protein powder (unflavoured)",p:80.0,f:0},{n:"Casein protein powder",p:78.0,f:0},
   {n:"Pea protein powder",p:80.0,f:1.0},{n:"Milk protein isolate",p:82.0,f:0},
   {n:"Whipped cream (heavy)",p:2.0,f:0},{n:"Sour cream (full fat)",p:2.1,f:0},
-  {n:"Sour cream (light)",p:3.3,f:0},{n:"Crème fraîche",p:1.7,f:0},
+  {n:"Sour cream (light)",p:3.3,f:0},{n:"Creme fraiche",p:1.7,f:0},
   {n:"Butter (unsalted)",p:0.9,f:0},{n:"Ghee (clarified butter)",p:0.3,f:0},
   {n:"Labneh (strained yogurt)",p:8.0,f:0},{n:"Paneer",p:18.3,f:0},
   {n:"Halloumi (grilled)",p:21.0,f:0},{n:"Queso fresco",p:16.8,f:0},
@@ -666,7 +666,7 @@ Veg:[
   {n:"Celery (raw)",p:0.7,f:1.6},{n:"Celeriac (cooked)",p:1.2,f:1.6},
   {n:"Cucumber (raw)",p:0.7,f:0.5},{n:"Zucchini / courgette (raw)",p:1.2,f:1.1},
   {n:"Eggplant / aubergine (cooked)",p:0.8,f:2.5},{n:"Bell pepper, green (raw)",p:0.9,f:1.7},
-  {n:"Bell pepper, red (raw)",p:1.0,f:2.1},{n:"Jalapeño (raw)",p:0.9,f:1.4},
+  {n:"Bell pepper, red (raw)",p:1.0,f:2.1},{n:"Jalapeno (raw)",p:0.9,f:1.4},
   {n:"Tomato (raw)",p:0.9,f:1.2},{n:"Cherry tomatoes (raw)",p:0.9,f:1.2},
   {n:"Avocado (raw)",p:2.0,f:6.7},{n:"Corn, sweet (cooked)",p:3.3,f:2.4},
   {n:"Sweet potato (baked)",p:2.0,f:3.3},{n:"Yam (baked)",p:1.5,f:4.1},
@@ -794,7 +794,7 @@ Fruit:[
   {n:"Persimmon (raw, Fuyu)",p:0.6,f:3.6},{n:"Quince (raw)",p:0.4,f:1.9},
   {n:"Breadfruit (raw)",p:1.1,f:4.9},{n:"Tamarind (raw pulp)",p:2.8,f:5.1},
   {n:"Coconut meat (raw)",p:3.3,f:9.0},{n:"Coconut meat (dried, unsweetened)",p:6.9,f:16.3},
-  {n:"Açaí (frozen pulp, unsweetened)",p:1.5,f:2.5},{n:"Elderberries (raw)",p:0.7,f:7.0},
+  {n:"Acai (frozen pulp, unsweetened)",p:1.5,f:2.5},{n:"Elderberries (raw)",p:0.7,f:7.0},
   {n:"Gooseberries (raw)",p:0.9,f:4.3},{n:"Mulberries (raw)",p:1.4,f:1.7},
   {n:"Boysenberries (frozen)",p:1.1,f:5.3},{n:"Loganberries (frozen)",p:1.5,f:5.9},
   {n:"Goji berries (dried)",p:14.3,f:7.4},{n:"Barberries (dried)",p:7.4,f:7.0},
@@ -832,7 +832,7 @@ function renderCats(){
   const cats=[...ALL_CATS,MY_FOODS_CAT];
   document.getElementById('catRow').innerHTML=cats.map(cat=>{
     const badge=cat===MY_FOODS_CAT&&custom.length?' ('+custom.length+')':'';
-    return '<button class="cat-btn'+(cat===currentCat?' active':'')+'" onclick="setCat(''+cat+'',this)">'+cat+badge+'</button>';
+    return '<button class="cat-btn'+(cat===currentCat?' active':'')+'" onclick="setCat(\'' +cat+ '\',this)">'+cat+badge+'</button>';
   }).join('');
 }
 
@@ -861,26 +861,39 @@ function filterFoods(){
 
 function renderFoodList(foods){
   if(!foods||!foods.length){
-    document.getElementById('foodList').innerHTML='<div class="empty">No match — use manual entry below or try ✦ AI Estimate.</div>';
+    document.getElementById('foodList').innerHTML='<div class="empty">No match -- use manual entry below or try * AI Estimate.</div>';
     return;
   }
-  document.getElementById('foodList').innerHTML=foods.map(f=>{
-    const del=f.custom?'<button onclick="event.stopPropagation();deleteCustomFood(''+f.n+'')" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:0 3px;" title="Remove">&#215;</button>':'';
-    return '<div class="food-row'+(selectedFood&&selectedFood.n===f.n?' selected':'')+'" onclick="selectFood(this,''+f.n+'','+f.p+','+f.f+')">'
-      +'<div><div class="food-name">'+f.n+'</div><div class="food-per">per 100g</div></div>'
-      +'<div style="display:flex;gap:5px;align-items:center;"><span class="pill pill-p">'+f.p+'g P</span><span class="pill pill-f">'+f.f+'g F</span>'+del+'</div>'
+  var fl=document.getElementById('foodList');
+  fl.innerHTML='';
+  foods.forEach(function(food){
+    var row=document.createElement('div');
+    row.className='food-row'+(selectedFood&&selectedFood.n===food.n?' selected':'');
+    var inner='<div><div class="food-name">'+food.n+'</div><div class="food-per">per 100g</div></div>'
+      +'<div style="display:flex;gap:5px;align-items:center;">'
+      +'<span class="pill pill-p">'+food.p+'g P</span>'
+      +'<span class="pill pill-f">'+food.f+'g F</span>'
+      +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:0 3px;">x</button>':'')
       +'</div>';
-  }).join('');
+    row.innerHTML=inner;
+    row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,row);});
+    if(food.custom){
+      var db=row.querySelector('.cfdelb');
+      if(db){(function(n){db.addEventListener('click',function(e){e.stopPropagation();deleteCustomFood(n);});})(food.n);}
+    }
+    fl.appendChild(row);
+  });
 }
 
-function selectFood(el,name,p,f){
-  selectedFood={n:name,p,f};
-  document.querySelectorAll('.food-row').forEach(r=>r.classList.remove('selected'));
-  el.classList.add('selected');
+function selectFoodItem(name,p,f,row){
+  selectedFood={n:name,p:p,f:f};
+  document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
+  if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
 }
+function selectFood(el,name,p,f){selectFoodItem(name,p,f,el);}
 
-/* ── UNIT CONVERSION ── */
+/* -- UNIT CONVERSION -- */
 function toGrams(amount,unit){
   switch(unit){
     case 'oz':  return amount*28.3495;
@@ -891,7 +904,7 @@ function toGrams(amount,unit){
   }
 }
 
-/* ── DATE NAVIGATION ── */
+/* -- DATE NAVIGATION -- */
 let activeDate=todayKey();
 let activeMeal='Breakfast';
 
@@ -955,12 +968,12 @@ function addFood(){
 function showSaveBar(){
   const entries=getEntries().filter(e=>e.date===activeDate);
   const bar=document.getElementById('saveBar');
-  document.getElementById('saveCount').textContent=`${entries.length} item${entries.length!==1?'s':''} logged · ${new Date().toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'})}`;
+  document.getElementById('saveCount').textContent=`${entries.length} item${entries.length!==1?'s':''} logged - ${new Date().toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'})}`;
   bar.style.display='block';
 }
 
 const MEAL_ORDER=['Breakfast','Lunch','Dinner','Snack'];
-const MEAL_ICONS={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍎'};
+const MEAL_ICONS={Breakfast:'',Lunch:'',Dinner:'',Snack:''};
 
 function renderToday(){
   const entries=getEntries().filter(e=>e.date===activeDate);
@@ -975,7 +988,7 @@ function renderToday(){
   document.getElementById('barF').style.width=Math.min(100,totalF/goals.f*100)+'%';
   const list=document.getElementById('logList');
   if(!entries.length){
-    list.innerHTML='<div class="empty">Nothing logged yet — add food above.</div>';
+    list.innerHTML='<div class="empty">Nothing logged yet -- add food above.</div>';
     document.getElementById('saveBar').style.display='none';
     return;
   }
@@ -999,7 +1012,7 @@ function renderToday(){
     items.slice().reverse().forEach(e=>{
       html+=`<div class="log-item">
         <div class="log-dot" style="background:${e.p>=e.f?'var(--green-bright)':'var(--amber-bright)'}"></div>
-        <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.servingLabel||((e.serving||100)+'g')} · ${fmtTime(e.ts)}</div></div>
+        <div class="log-info"><div class="log-name">${esc(e.name)}</div><div class="log-meta">${e.servingLabel||((e.serving||100)+'g')} - ${fmtTime(e.ts)}</div></div>
         <div class="log-pills">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''} ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div>
         <button class="del-btn" onclick="openEdit('${e.id}')" style="color:var(--muted);font-size:15px;" title="Edit">&#9998;</button>
         <button class="del-btn" onclick="deleteEntry('${e.id}')" title="Delete">&#215;</button>
@@ -1056,7 +1069,7 @@ function renderHistory(){
         <span class="hist-date">${fmtDate(date)}</span>
         <div style="display:flex;gap:5px;align-items:center;">
           <span class="pill pill-p">${dp}g P</span><span class="pill pill-f">${df}g F</span>
-          <span style="font-size:13px;color:var(--muted);margin-left:2px">›</span>
+          <span style="font-size:13px;color:var(--muted);margin-left:2px">></span>
         </div>
       </div>
       <div class="hist-entries">${de.map(e=>`<div class="hist-entry"><span>${esc(e.name)} <span style="color:var(--muted)">${e.serving||100}g</span></span><div style="display:flex;gap:5px;">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''}${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div></div>`).join('')}</div>
@@ -1067,13 +1080,13 @@ function renderHistory(){
 function toggleHistDay(head){head.nextElementSibling.classList.toggle('open');}
 
 function renderGoalsForm(){const g=getGoals();document.getElementById('goalP').value=g.p;document.getElementById('goalF').value=g.f;}
-function saveGoals(){const p=parseInt(document.getElementById('goalP').value)||150;const f=parseInt(document.getElementById('goalF').value)||30;saveGoalsData({p,f});renderToday();toast('Goals saved ✓');}
+function saveGoals(){const p=parseInt(document.getElementById('goalP').value)||150;const f=parseInt(document.getElementById('goalF').value)||30;saveGoalsData({p,f});renderToday();toast('Goals saved OK');}
 
 async function aiEstimate(){
   const name=document.getElementById('searchInput').value.trim();
   if(!name){toast('Type a food name first');return;}
   const btn=document.getElementById('aiBtn');const status=document.getElementById('aiStatus');
-  btn.textContent='…';btn.disabled=true;status.textContent='Estimating…';
+  btn.textContent='...';btn.disabled=true;status.textContent='Estimating...';
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:200,system:'Nutrition expert. Return ONLY valid JSON no markdown: {"name":"...","protein_g":NUMBER,"fibre_g":NUMBER,"serving_note":"..."}. Per 100g basis.',messages:[{role:'user',content:name}]})});
     const data=await res.json();
@@ -1083,12 +1096,12 @@ async function aiEstimate(){
     document.getElementById('manualF').value=parsed.fibre_g||0;
     document.getElementById('manualEntry').style.display='block';
     status.textContent=parsed.serving_note?`Assumed: ${parsed.serving_note}`:'';
-    toast('Macros estimated ✓');
-  }catch(e){status.textContent='Could not estimate — enter manually.';}
-  finally{btn.textContent='✦ AI Estimate';btn.disabled=false;}
+    toast('Macros estimated OK');
+  }catch(e){status.textContent='Could not estimate -- enter manually.';}
+  finally{btn.textContent='* AI Estimate';btn.disabled=false;}
 }
 
-/* ── BARCODE — PHOTO CAPTURE ── */
+/* -- BARCODE -- PHOTO CAPTURE -- */
 async function scanBarcodeFromPhoto(evt){
   const file=evt.target.files[0];
   if(!file)return;
@@ -1127,7 +1140,7 @@ async function startScanner(){
   const status=document.getElementById('scannerStatus');
   const wrap=document.getElementById('scannerWrap');
   const btn=document.getElementById('startScanBtn');
-  status.textContent='Loading scanner…';
+  status.textContent='Loading scanner...';
   btn.style.display='none';
   // Load ZXing
   if(!window.ZXing){
@@ -1152,8 +1165,8 @@ async function startScanner(){
     await video.play();
     wrap.style.display='block';
     scannerActive=true;
-    status.textContent='Point camera at barcode — hold steady';
-    // Canvas polling approach — works on all browsers
+    status.textContent='Point camera at barcode -- hold steady';
+    // Canvas polling approach -- works on all browsers
     const canvas=document.createElement('canvas');
     const reader=new ZXing.BrowserMultiFormatReader();
     function tick(){
@@ -1199,7 +1212,7 @@ function stopScanner(){
 async function lookupBarcode(){
   const code=document.getElementById('barcodeInput').value.trim();
   if(!code){toast('Enter a barcode number');return;}
-  document.getElementById('barcodeStatus').textContent='Looking up product…';
+  document.getElementById('barcodeStatus').textContent='Looking up product...';
   document.getElementById('barcodeResult').style.display='none';
   barcodeData=null;
   try{
@@ -1214,7 +1227,7 @@ async function lookupBarcode(){
     document.getElementById('barcodeProductName').textContent=sname;
     document.getElementById('barcodeP').textContent=`${p}g protein`;
     document.getElementById('barcodeF').textContent=`${f}g fibre`;
-    document.getElementById('barcodeServing').textContent=`Per 100g · Serving size: ${prod.serving_size||'not listed'}`;
+    document.getElementById('barcodeServing').textContent=`Per 100g - Serving size: ${prod.serving_size||'not listed'}`;
     document.getElementById('barcodeResult').style.display='block';
     document.getElementById('barcodeStatus').textContent='';
   }catch(e){document.getElementById('barcodeStatus').textContent='Lookup failed. Check your connection.';}
@@ -1231,7 +1244,7 @@ function addFromBarcode(){
     cf.push({n:barcodeData.name,p:barcodeData.p,f:barcodeData.f,custom:true,barcode:true});
     saveCustomFoods(cf);renderCats();
   }
-  closeModal('barcode');renderToday();toast(barcodeData.name+' added ✓ (saved to My Foods)');showSaveBar();barcodeData=null;
+  closeModal('barcode');renderToday();toast(barcodeData.name+' added OK (saved to My Foods)');showSaveBar();barcodeData=null;
 }
 
 function openModal(type){document.getElementById(type+'Modal').classList.add('open');}
@@ -1265,8 +1278,8 @@ function setView(view,el){
   if(view==='goals')renderGoalsForm();
 }
 
-/* ── IMPORT DATA ── */
-/* ── MY FOODS ── */
+/* -- IMPORT DATA -- */
+/* -- MY FOODS -- */
 function saveCustomFood(){
   var name=document.getElementById('cfName').value.trim();
   var p=parseFloat(document.getElementById('cfP').value)||0;
@@ -1279,9 +1292,10 @@ function saveCustomFood(){
   saveCustomFoods(custom);
   closeModal('customFood');
   renderCats();
-  toast(name+' saved to My Foods ✓');
+  toast(name+' saved to My Foods OK');
 }
-function deleteCustomFood(name){
+function deleteCustomFood(btn){
+  var name=btn.dataset.n;
   saveCustomFoods(getCustomFoods().filter(function(f){return f.n!==name;}));
   renderCats();
   renderFoodList(getFoodsForCat(currentCat));
@@ -1306,14 +1320,14 @@ function importData(evt){
       const data=JSON.parse(e.target.result);
       if(!data.entries||!Array.isArray(data.entries)) throw new Error('Invalid format');
       const existing=getEntries();
-      // Merge — avoid duplicates by id
+      // Merge -- avoid duplicates by id
       const existingIds=new Set(existing.map(e=>e.id));
       const newEntries=data.entries.filter(e=>!existingIds.has(e.id));
       const merged=[...existing,...newEntries].sort((a,b)=>a.ts-b.ts);
       saveEntries(merged);
       if(data.goals) saveGoalsData(data.goals);
       const status=document.getElementById('importStatus');
-      status.textContent='✓ Imported '+newEntries.length+' entries successfully!';
+      status.textContent='OK Imported '+newEntries.length+' entries successfully!';
       status.style.display='block';
       renderToday();
       setTimeout(()=>{status.style.display='none';},4000);
@@ -1325,7 +1339,7 @@ function importData(evt){
   reader.readAsText(file);
 }
 
-/* ── EDIT ENTRY ── */
+/* -- EDIT ENTRY -- */
 let editMeal='Breakfast';
 
 function openEdit(id){
@@ -1362,7 +1376,7 @@ function saveEdit(){
   saveEntries(entries);
   closeModal('edit');
   renderToday();
-  toast('Entry updated ✓');
+  toast('Entry updated OK');
 }
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
