@@ -146,6 +146,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .view{display:none;}
 .view.active{display:block;}
+.serve-mode-btn{flex:1;padding:6px 4px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+.serve-mode-btn.active{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue);}
 .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;}
 </style>
 </head>
@@ -218,19 +220,38 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         </div>
       </div>
     </div>
-    <div class="add-strip">
-      <div class="serving-wrap">
-        <span class="serving-label">Serving</span>
-        <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
-        <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
-          <option value="g">g</option>
-          <option value="oz">oz</option>
-          <option value="lbs">lbs</option>
-          <option value="tbsp">tbsp</option>
-          <option value="tsp">tsp</option>
-        </select>
+    <div class="add-strip" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:6px;width:100%;">
+        <button class="serve-mode-btn active" id="smGrams" onclick="setServeMode('grams',this)">By weight</button>
+        <button class="serve-mode-btn" id="smCount" onclick="setServeMode('count',this)">By count</button>
+        <button class="serve-mode-btn" id="smServing" onclick="setServeMode('serving',this)">By serving</button>
       </div>
-      <button class="add-btn" onclick="addFood()">+ Add entry</button>
+      <div style="display:flex;gap:8px;width:100%;align-items:center;">
+        <div id="serveModeGrams" style="display:flex;align-items:center;gap:5px;flex:1;">
+          <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
+          <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
+            <option value="g">g</option>
+            <option value="oz">oz</option>
+            <option value="lbs">lbs</option>
+            <option value="tbsp">tbsp</option>
+            <option value="tsp">tsp</option>
+          </select>
+        </div>
+        <div id="serveModeCount" style="display:none;align-items:center;gap:5px;flex:1;">
+          <input class="serving-input" id="countInput" type="number" value="1" min="0.5" max="99" step="0.5" style="width:60px;"/>
+          <span style="font-size:13px;color:var(--muted);">x</span>
+          <input class="serving-input" id="countGrams" type="number" value="50" min="1" max="999" step="1" style="width:65px;"/>
+          <span style="font-size:12px;color:var(--muted);">g each</span>
+        </div>
+        <div id="serveModeServing" style="display:none;align-items:center;gap:5px;flex:1;">
+          <input class="serving-input" id="servingCount" type="number" value="1" min="0.5" max="99" step="0.5" style="width:60px;"/>
+          <span style="font-size:13px;color:var(--muted);">serving(s)</span>
+          <span style="font-size:12px;color:var(--muted);">=</span>
+          <input class="serving-input" id="servingGrams" type="number" value="100" min="1" max="999" step="1" style="width:65px;"/>
+          <span style="font-size:12px;color:var(--muted);">g</span>
+        </div>
+        <button class="add-btn" style="flex:0 0 auto;padding:9px 16px;" onclick="addFood()">+ Add</button>
+      </div>
     </div>
   </div>
 
@@ -295,15 +316,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <button class="modal-close" onclick="closeModal('barcode')">&#215;</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;">
-        <p style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px;">How to scan on iPhone:</p>
-        <p style="font-size:13px;color:var(--text);line-height:1.5;">1. Open your iPhone <strong>Camera app</strong><br>2. Point at the barcode<br>3. Tap the yellow banner that appears<br>4. Copy the number and paste it below</p>
-      </div>
-      <div class="barcode-row">
-        <input class="text-input" id="barcodeInput" type="text" placeholder="Paste barcode number here" inputmode="numeric"/>
-        <button class="add-btn" style="flex:0 0 auto;padding:9px 14px;" onclick="lookupBarcode()">Look up</button>
-      </div>
-      <div id="barcodeStatus" class="ai-status"></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Find the barcode number printed under the lines on the product label and type it below.</p>
+      <input class="text-input" id="barcodeInput" type="text" placeholder="e.g. 0628110323788" inputmode="numeric" style="font-size:18px;padding:14px;margin-bottom:10px;letter-spacing:2px;text-align:center;"/>
+      <button class="add-btn" style="width:100%;padding:12px;font-size:15px;margin-bottom:10px;" onclick="lookupBarcode()">Look up product</button>
+      <div id="barcodeStatus" class="ai-status" style="text-align:center;"></div>
       <div id="scannerStatus" class="ai-status"></div>
       <div id="barcodeResult" style="display:none;">
         <div class="result-box">
@@ -311,9 +327,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           <div style="display:flex;gap:8px;margin-top:6px;"><span class="pill pill-p" id="barcodeP"></span><span class="pill pill-f" id="barcodeF"></span></div>
           <div class="result-note" id="barcodeServing"></div>
         </div>
-        <button class="modal-btn primary" onclick="addFromBarcode()">Add to today</button>
+        <button class="modal-btn primary" onclick="addFromBarcode()" style="margin-bottom:8px;">Add to today</button>
       </div>
-      <button class="modal-btn secondary" onclick="closeModal('barcode')" style="margin-top:8px;">Cancel</button>
+      <button class="modal-btn secondary" onclick="closeModal('barcode')">Cancel</button>
     </div>
   </div>
 </div>
@@ -890,6 +906,17 @@ function selectFoodItem(name,p,f,row){
 }
 function selectFood(el,name,p,f){selectFoodItem(name,p,f,el);}
 
+/* -- SERVE MODE -- */
+var currentServeMode='grams';
+function setServeMode(mode,el){
+  currentServeMode=mode;
+  document.querySelectorAll('.serve-mode-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('serveModeGrams').style.display=mode==='grams'?'flex':'none';
+  document.getElementById('serveModeCount').style.display=mode==='count'?'flex':'none';
+  document.getElementById('serveModeServing').style.display=mode==='serving'?'flex':'none';
+}
+
 /* -- UNIT CONVERSION -- */
 function toGrams(amount,unit){
   switch(unit){
@@ -954,6 +981,10 @@ function addFood(){
   document.getElementById('manualF').value='';
   document.getElementById('servingInput').value='100';
   document.getElementById('servingUnit').value='g';
+  document.getElementById('countInput').value='1';
+  document.getElementById('countGrams').value='50';
+  document.getElementById('servingCount').value='1';
+  document.getElementById('servingGrams').value='100';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(getFoodsForCat(currentCat));
