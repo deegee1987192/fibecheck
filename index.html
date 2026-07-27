@@ -893,8 +893,28 @@ function filterFoods(){
 }
 
 function renderFoodList(foods){
+  var isMyFoods=(currentCat===MY_FOODS_CAT);
+  // My Foods header with count + clear all
+  var hdr=document.getElementById('myFoodsHdr');
+  if(isMyFoods){
+    if(!hdr){
+      hdr=document.createElement('div');
+      hdr.id='myFoodsHdr';
+      hdr.style='display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;';
+      var fl0=document.getElementById('foodList');
+      fl0.parentNode.insertBefore(hdr,fl0);
+    }
+    var cnt=getCustomFoods().length;
+    hdr.innerHTML=cnt
+      ?'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+cnt+' saved food'+(cnt!==1?'s':'')+'</span><button onclick="clearAllMyFoods()" style="background:none;border:none;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;">Clear all</button>'
+      :'';
+  } else {
+    if(hdr)hdr.innerHTML='';
+  }
   if(!foods||!foods.length){
-    document.getElementById('foodList').innerHTML='<div class="empty">No match -- use manual entry below or try * AI Estimate.</div>';
+    document.getElementById('foodList').innerHTML=isMyFoods
+      ?'<div class="empty">No saved foods yet. Tap + My Foods below or scan a barcode.</div>'
+      :'<div class="empty">No match -- use manual entry below or try AI Estimate.</div>';
     return;
   }
   var fl=document.getElementById('foodList');
@@ -1354,6 +1374,8 @@ function closeModal(type){
     document.getElementById('cfEditName').value='';
     document.getElementById('cfEditP').value='';
     document.getElementById('cfEditF').value='';
+    document.getElementById('cfEditServingG').value='';
+    document.getElementById('cfEditNote').textContent='';
     document.getElementById('customEditModal').classList.remove('open');
   }
   if(type==='customFood'){
@@ -1410,7 +1432,13 @@ function saveCustomFood(){
   }
   var custom=getCustomFoods();
   if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
-  custom.push({n:name,p:p,f:f,custom:true,added:Date.now()});
+  var entry={n:name,p:p,f:f,custom:true,added:Date.now(),cfMode:cfMode};
+  if(cfMode==='serving'){
+    entry.servingG=parseFloat(document.getElementById('cfServingG').value)||100;
+    entry.servingP=parseFloat(document.getElementById('cfServingP').value)||0;
+    entry.servingF=parseFloat(document.getElementById('cfServingF').value)||0;
+  }
+  custom.push(entry);
   saveCustomFoods(custom);
   closeModal('customFood');
   renderCats();
@@ -1419,20 +1447,41 @@ function saveCustomFood(){
 function openEditCustomFood(food){
   document.getElementById('cfEditId').value=food.n;
   document.getElementById('cfEditName').value=food.n;
-  document.getElementById('cfEditP').value=food.p;
-  document.getElementById('cfEditF').value=food.f;
+  // Restore original entry values if saved as per-serving
+  if(food.cfMode==='serving'&&food.servingG){
+    document.getElementById('cfEditP').value=food.servingP||0;
+    document.getElementById('cfEditF').value=food.servingF||0;
+    document.getElementById('cfEditServingG').value=food.servingG;
+    document.getElementById('cfEditNote').textContent='Entered as: '+food.servingP+'g protein, '+food.servingF+'g fibre per '+food.servingG+'g serving';
+  } else {
+    document.getElementById('cfEditP').value=food.p;
+    document.getElementById('cfEditF').value=food.f;
+    document.getElementById('cfEditServingG').value='';
+    document.getElementById('cfEditNote').textContent='Values shown are per 100g';
+  }
   document.getElementById('customEditModal').classList.add('open');
 }
 function saveEditCustomFood(){
   var oldName=document.getElementById('cfEditId').value;
   var name=document.getElementById('cfEditName').value.trim();
-  var p=parseFloat(document.getElementById('cfEditP').value)||0;
-  var f=parseFloat(document.getElementById('cfEditF').value)||0;
+  var rawP=parseFloat(document.getElementById('cfEditP').value)||0;
+  var rawF=parseFloat(document.getElementById('cfEditF').value)||0;
+  var sg=parseFloat(document.getElementById('cfEditServingG').value)||0;
   if(!name){toast('Enter a food name');return;}
-  if(!p&&!f){toast('Enter protein or fibre value');return;}
+  if(!rawP&&!rawF){toast('Enter protein or fibre value');return;}
+  var p,f,entry;
+  var oldFood=getCustomFoods().find(function(fd){return fd.n===oldName;})||{};
+  if(sg){
+    // User provided a serving size - treat as per-serving
+    p=r1(rawP/sg*100);
+    f=r1(rawF/sg*100);
+    entry={n:name,p:p,f:f,custom:true,added:oldFood.added||Date.now(),cfMode:'serving',servingG:sg,servingP:rawP,servingF:rawF};
+  } else {
+    p=rawP; f=rawF;
+    entry={n:name,p:p,f:f,custom:true,added:oldFood.added||Date.now(),cfMode:'per100'};
+  }
   var custom=getCustomFoods().map(function(fd){
-    if(fd.n!==oldName)return fd;
-    return {n:name,p:p,f:f,custom:true,added:fd.added||Date.now()};
+    return fd.n===oldName?entry:fd;
   });
   saveCustomFoods(custom);
   closeModal('customEdit');
@@ -1440,8 +1489,14 @@ function saveEditCustomFood(){
   renderFoodList(getFoodsForCat(currentCat));
   toast(name+' updated OK');
 }
-function deleteCustomFood(btn){
-  var name=btn.dataset.n;
+function clearAllMyFoods(){
+  if(!confirm('Remove all foods from My Foods?'))return;
+  saveCustomFoods([]);
+  renderCats();
+  renderFoodList(getFoodsForCat(currentCat));
+  toast('My Foods cleared');
+}
+function deleteCustomFood(name){
   saveCustomFoods(getCustomFoods().filter(function(f){return f.n!==name;}));
   renderCats();
   renderFoodList(getFoodsForCat(currentCat));
@@ -1551,9 +1606,14 @@ var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleD
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="cfEditName" type="text" placeholder="Food name"/>
       </div>
-      <div class="manual-grid" style="margin-bottom:16px;">
-        <div class="field-wrap p"><label>Protein per 100g</label><input class="num-input" id="cfEditP" type="number" min="0" max="500" step="0.5"/></div>
-        <div class="field-wrap f"><label>Fibre per 100g</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
+      <div id="cfEditNote" style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic;"></div>
+      <div class="manual-grid" style="margin-bottom:8px;">
+        <div class="field-wrap p"><label>Protein</label><input class="num-input" id="cfEditP" type="number" min="0" max="500" step="0.5"/></div>
+        <div class="field-wrap f"><label>Fibre</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size (g) — leave blank if values are per 100g</label>
+        <input class="num-input" id="cfEditServingG" type="number" placeholder="e.g. 250" min="1" max="9999" step="1" style="width:100%;"/>
       </div>
       <button class="modal-btn primary" onclick="saveEditCustomFood()" style="margin-bottom:8px;">Save changes</button>
       <button class="modal-btn secondary" onclick="closeModal('customEdit')">Cancel</button>
