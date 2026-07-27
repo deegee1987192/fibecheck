@@ -146,8 +146,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .view{display:none;}
 .view.active{display:block;}
-.serve-mode-btn{flex:1;padding:6px 4px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
-.serve-mode-btn.active{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue);}
 .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;}
 </style>
 </head>
@@ -222,21 +220,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     </div>
     <div class="add-strip">
       <div class="serving-wrap">
-        <span class="serving-label" id="servingLabel">Amount</span>
+        <span class="serving-label">Serving</span>
         <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
-        <select id="servingUnit" onchange="onUnitChange()" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
+        <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
           <option value="g">g</option>
-          <option value="count">count</option>
           <option value="oz">oz</option>
           <option value="lbs">lbs</option>
           <option value="tbsp">tbsp</option>
           <option value="tsp">tsp</option>
         </select>
       </div>
-      <button class="add-btn" onclick="addFood()">+ Add</button>
-    </div>
-    <div id="countHint" style="display:none;padding:6px 14px 8px;font-size:12px;color:var(--muted);background:var(--surface2);">
-      <span id="countHintText"></span>
+      <button class="add-btn" onclick="addFood()">+ Add entry</button>
     </div>
   </div>
 
@@ -297,27 +291,35 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div class="modal-overlay" id="barcodeModal">
   <div class="modal">
     <div class="modal-head">
-      <span class="modal-title">Barcode Lookup</span>
+      <span class="modal-title">&#9640; Scan Barcode</span>
       <button class="modal-close" onclick="closeModal('barcode')">&#215;</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Find the barcode number printed under the lines on the product label and type it below.</p>
-      <input class="text-input" id="barcodeInput" type="text" placeholder="e.g. 0628110323788" inputmode="numeric" style="font-size:18px;padding:14px;margin-bottom:10px;letter-spacing:2px;text-align:center;"/>
-      <button class="add-btn" style="width:100%;padding:12px;font-size:15px;margin-bottom:10px;" onclick="lookupBarcode()">Look up product</button>
-      <div id="barcodeStatus" class="ai-status" style="text-align:center;"></div>
-      <div id="scannerStatus" class="ai-status"></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Tap the button to open your camera. Point at the barcode and take a photo — it will read automatically.</p>
+      <button class="modal-btn primary" onclick="document.getElementById('barcodePhoto').click()" style="margin-bottom:10px;">&#128247; Open Camera to Scan</button>
+      <input type="file" id="barcodePhoto" accept="image/*" capture="environment" style="display:none;" onchange="scanBarcodeFromPhoto(event)"/>
+      <div id="scannerStatus" class="ai-status" style="margin-bottom:8px;text-align:center;"></div>
+      <p style="font-size:12px;color:var(--muted2);text-align:center;margin-bottom:10px;">&#8212; or type the number from the label &#8212;</p>
+      <div class="barcode-row">
+        <input class="text-input" id="barcodeInput" type="text" placeholder="e.g. 0628110323788" inputmode="numeric"/>
+        <button class="add-btn" style="flex:0 0 auto;padding:9px 14px;" onclick="lookupBarcode()">Look up</button>
+      </div>
+      <div id="barcodeStatus" class="ai-status"></div>
       <div id="barcodeResult" style="display:none;">
         <div class="result-box">
           <div class="result-name" id="barcodeProductName"></div>
-          <div style="display:flex;gap:8px;margin-top:6px;"><span class="pill pill-p" id="barcodeP"></span><span class="pill pill-f" id="barcodeF"></span></div>
+          <div style="display:flex;gap:8px;"><span class="pill pill-p" id="barcodeP"></span><span class="pill pill-f" id="barcodeF"></span></div>
           <div class="result-note" id="barcodeServing"></div>
         </div>
-        <button class="modal-btn primary" onclick="addFromBarcode()" style="margin-bottom:8px;">Add to today</button>
+        <button class="modal-btn primary" onclick="addFromBarcode()">Add to today</button>
       </div>
-      <button class="modal-btn secondary" onclick="closeModal('barcode')">Cancel</button>
+      <button class="modal-btn secondary" onclick="closeModal('barcode')" style="margin-top:8px;">Cancel</button>
     </div>
   </div>
 </div>
+
+</div><!-- /scroll-area -->
+
 
 <!-- CUSTOM FOOD MODAL -->
 <div class="modal-overlay" id="customFoodModal">
@@ -327,34 +329,28 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <button class="modal-close" onclick="closeModal('customFood')">&#215;</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Save a food to your personal list for quick access any time.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Enter the food name, your serving size, and the protein/fibre for that serving.</p>
       <div style="margin-bottom:10px;">
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="cfName" type="text" placeholder="e.g. My protein shake"/>
       </div>
-      <!-- Toggle: per 100g or per actual serving -->
-      <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button class="serve-mode-btn active" id="cfMode100" onclick="setCfMode('per100',this)">Per 100g</button>
-        <button class="serve-mode-btn" id="cfModeServing" onclick="setCfMode('serving',this)">Per serving</button>
-      </div>
-      <!-- Per 100g mode -->
-      <div id="cfPer100" style="margin-bottom:12px;">
-        <div class="manual-grid">
-          <div class="field-wrap p"><label>Protein (g per 100g)</label><input class="num-input" id="cfP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
-          <div class="field-wrap f"><label>Fibre (g per 100g)</label><input class="num-input" id="cfF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size</label>
+        <div style="display:flex;gap:6px;">
+          <input class="num-input" id="cfAmt" type="number" placeholder="100" min="0.1" max="9999" step="0.1" style="flex:1;"/>
+          <select id="cfUnit" style="padding:9px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:600;outline:none;">
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="oz">oz</option>
+            <option value="tbsp">tbsp</option>
+            <option value="tsp">tsp</option>
+            <option value="count">count (each)</option>
+          </select>
         </div>
       </div>
-      <!-- Per serving mode -->
-      <div id="cfPerServing" style="display:none;margin-bottom:12px;">
-        <div style="margin-bottom:8px;">
-          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size (g)</label>
-          <input class="num-input" id="cfServingG" type="number" placeholder="e.g. 250" min="1" max="9999" step="1" style="width:100%;"/>
-        </div>
-        <div class="manual-grid">
-          <div class="field-wrap p"><label>Protein per serving</label><input class="num-input" id="cfServingP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
-          <div class="field-wrap f"><label>Fibre per serving</label><input class="num-input" id="cfServingF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
-        </div>
-        <p style="font-size:11px;color:var(--muted);margin-top:6px;">Values will be converted to per-100g for the database.</p>
+      <div class="manual-grid" style="margin-bottom:16px;">
+        <div class="field-wrap p"><label>Protein for this serving</label><input class="num-input" id="cfP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
+        <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
       </div>
       <button class="modal-btn primary" onclick="saveCustomFood()" style="margin-bottom:8px;">Save to My Foods</button>
       <button class="modal-btn secondary" onclick="closeModal('customFood')">Cancel</button>
@@ -863,27 +859,15 @@ function setCat(cat,el){
   renderFoodList(getFoodsForCat(currentCat));
 }
 
-function matchesSearch(name, words){
-  var n=name.toLowerCase();
-  return words.every(function(w){return n.includes(w);});
-}
+function matchesSearch(name,words){var n=name.toLowerCase();return words.every(function(w){return n.includes(w);});}
 function filterFoods(){
-  var raw=document.getElementById('searchInput').value.trim().toLowerCase();
-  if(raw.length>0){
-    var words=raw.split(/\s+/).filter(function(w){return w.length>0;});
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  if(q.length>1){
+    var words=q.split(' ').filter(function(w){return w.length>0;});
     var results=[];
-    ALL_CATS.forEach(function(cat){
-      FOODS[cat].forEach(function(f){if(matchesSearch(f.n,words))results.push(f);});
-    });
+    ALL_CATS.forEach(function(cat){FOODS[cat].forEach(function(f){if(matchesSearch(f.n,words))results.push(f);});});
     getCustomFoods().forEach(function(f){if(matchesSearch(f.n,words))results.push(f);});
-    // Sort: exact phrase match first, then any-word match
-    results.sort(function(a,b){
-      var an=a.n.toLowerCase(), bn=b.n.toLowerCase();
-      var aExact=an.includes(raw)?0:1;
-      var bExact=bn.includes(raw)?0:1;
-      if(aExact!==bExact)return aExact-bExact;
-      return a.n.localeCompare(b.n);
-    });
+    results.sort(function(a,b){return (a.n.toLowerCase().includes(q)?0:1)-(b.n.toLowerCase().includes(q)?0:1)||a.n.localeCompare(b.n);});
     document.getElementById('manualEntry').style.display=results.length===0?'block':'none';
     renderFoodList(results);
   } else {
@@ -893,28 +877,8 @@ function filterFoods(){
 }
 
 function renderFoodList(foods){
-  var isMyFoods=(currentCat===MY_FOODS_CAT);
-  // My Foods header with count + clear all
-  var hdr=document.getElementById('myFoodsHdr');
-  if(isMyFoods){
-    if(!hdr){
-      hdr=document.createElement('div');
-      hdr.id='myFoodsHdr';
-      hdr.style='display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;';
-      var fl0=document.getElementById('foodList');
-      fl0.parentNode.insertBefore(hdr,fl0);
-    }
-    var cnt=getCustomFoods().length;
-    hdr.innerHTML=cnt
-      ?'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+cnt+' saved food'+(cnt!==1?'s':'')+'</span><button onclick="clearAllMyFoods()" style="background:none;border:none;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;">Clear all</button>'
-      :'';
-  } else {
-    if(hdr)hdr.innerHTML='';
-  }
   if(!foods||!foods.length){
-    document.getElementById('foodList').innerHTML=isMyFoods
-      ?'<div class="empty">No saved foods yet. Tap + My Foods below or scan a barcode.</div>'
-      :'<div class="empty">No match -- use manual entry below or try AI Estimate.</div>';
+    document.getElementById('foodList').innerHTML='<div class="empty">No match -- use manual entry below or try * AI Estimate.</div>';
     return;
   }
   var fl=document.getElementById('foodList');
@@ -922,19 +886,21 @@ function renderFoodList(foods){
   foods.forEach(function(food){
     var row=document.createElement('div');
     row.className='food-row'+(selectedFood&&selectedFood.n===food.n?' selected':'');
-    var inner='<div><div class="food-name">'+food.n+'</div><div class="food-per">per 100g</div></div>'
-      +'<div style="display:flex;gap:5px;align-items:center;">'
-      +'<span class="pill pill-p">'+food.p+'g P</span>'
-      +'<span class="pill pill-f">'+food.f+'g F</span>'
-      +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:#9ca3af;font-size:15px;cursor:pointer;padding:0 3px;">x</button><button class="cfeditb" style="background:none;border:none;color:#2563eb;font-size:13px;cursor:pointer;padding:0 3px;font-weight:700;">edit</button>':'')
+    var servingLabel=food.origAmt?(food.origAmt+food.origUnit+' serving'):'per 100g';
+    var inner='<div><div class="food-name">'+food.n+'</div><div class="food-per">'+servingLabel+'</div></div>'
+      +'<div style="display:flex;gap:4px;align-items:center;">'
+      +'<span class="pill pill-p">'+food.origP!=null?food.origP+'g P':food.p+'g P</span>'
+      +'<span class="pill pill-f">'+food.origF!=null?food.origF+'g F':food.f+'g F</span>'
+      +(food.custom?'<button class="cfeditb" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:0 2px;font-weight:700;">edit</button>':'')
+      +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 2px;">x</button>':'')
       +'</div>';
     row.innerHTML=inner;
     row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,row);});
     if(food.custom){
-      var db=row.querySelector('.cfdelb');
-      if(db){(function(n){db.addEventListener('click',function(e){e.stopPropagation();deleteCustomFood(n);});})(food.n);}
       var eb=row.querySelector('.cfeditb');
       if(eb){(function(fd){eb.addEventListener('click',function(e){e.stopPropagation();openEditCustomFood(fd);});})(food);}
+      var db=row.querySelector('.cfdelb');
+      if(db){(function(n){db.addEventListener('click',function(e){e.stopPropagation();deleteCustomFood(n);});})(food.n);}
     }
     fl.appendChild(row);
   });
@@ -945,90 +911,8 @@ function selectFoodItem(name,p,f,row){
   document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
   if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
-  // If count mode active, refresh hint with this food's per-item weight
-  var unit=document.getElementById('servingUnit').value;
-  if(unit==='count'){
-    var hint=document.getElementById('countHint');
-    var hintText=document.getElementById('countHintText');
-    if(ITEM_WEIGHTS[name]){
-      hintText.textContent=name+': ~'+ITEM_WEIGHTS[name]+'g each (average)';
-    } else {
-      hintText.textContent='No per-item weight for this food. Count will use 100g per item.';
-    }
-    hint.style.display='block';
-  }
 }
 function selectFood(el,name,p,f){selectFoodItem(name,p,f,el);}
-
-
-/* -- PER-ITEM WEIGHTS (grams per single item) -- */
-var ITEM_WEIGHTS={
-  /* Fruit */
-  'Apple (raw, with skin)':182,'Apple (raw, without skin)':182,'Banana (raw)':118,
-  'Orange (navel, raw)':131,'Orange (blood, raw)':131,'Mandarin / clementine (raw)':74,
-  'Tangerine (raw)':84,'Grapefruit (raw, pink)':246,'Lemon (raw, without peel)':84,
-  'Lime (raw)':67,'Kumquat (raw)':19,'Strawberries (raw)':12,
-  'Blueberries (raw)':1.4,'Raspberries (raw)':4,'Blackberries (raw)':5,
-  'Cherries, sweet (raw)':8,'Grapes, red/purple (raw)':5,'Grapes, green/white (raw)':5,
-  'Watermelon (raw)':286,'Cantaloupe / rockmelon (raw)':140,'Kiwi fruit (raw, green)':69,
-  'Kiwi fruit (raw, gold)':69,'Pear (raw, with skin)':178,'Peach (raw)':150,
-  'Nectarine (raw)':142,'Plum (raw)':66,'Apricot (raw)':35,
-  'Fig (raw)':50,'Date, Medjool (raw)':24,'Mango (raw)':207,
-  'Avocado':150,'Persimmon (raw, Hachiya)':168,'Persimmon (raw, Fuyu)':168,
-  'Pomegranate (raw arils)':282,'Lychee (raw)':10,'Dragon fruit / pitaya (raw, red)':300,
-  'Star fruit / carambola (raw)':91,'Guava (raw)':90,'Passion fruit (raw)':18,
-  'Quince (raw)':92,'Plantain (raw)':179,'Papaya (raw)':304,
-  /* Vegetables */
-  'Broccoli (raw)':91,'Broccoli (steamed)':91,'Cauliflower (raw)':588,
-  'Brussels sprouts (cooked)':21,'Brussels sprouts (raw)':21,
-  'Carrots (raw)':61,'Kale (raw)':67,'Spinach (raw)':30,
-  'Corn, sweet (cooked)':77,'Sweet potato (baked)':114,'Potato, Russet (baked with skin)':173,
-  'Potato, white (baked)':150,'Beets / beetroot (cooked)':82,
-  'Artichoke (cooked)':120,'Asparagus (cooked)':16,'Tomato (raw)':123,
-  'Cherry tomatoes (raw)':17,'Bell pepper, green (raw)':119,'Bell pepper, red (raw)':119,
-  'Jalapeno (raw)':14,'Cucumber (raw)':201,'Zucchini / courgette (raw)':196,
-  'Eggplant / aubergine (cooked)':458,'Onion (raw)':110,'Red onion (raw)':110,
-  'Celery (raw)':40,'Avocado':150,'Green beans / French beans (cooked)':8,
-  'Mushrooms, white (raw)':18,'Portobello mushroom (grilled)':84,
-  'Pumpkin (cooked)':900,'Butternut squash (baked)':600,
-  'Leeks (cooked)':89,'Parsnip (cooked)':84,'Turnip (cooked)':122,
-  'Radish (raw)':4.5,'Fennel (raw)':234,
-  /* Eggs & Dairy */
-  'Whole egg':50,'Hard-boiled egg':50,'Scrambled eggs (plain)':61,
-  'Egg whites':30,'Egg yolk (raw)':17,
-  'Egg, duck (whole)':70,'Egg, quail (whole)':9,'Egg, goose (whole)':144,
-  /* Nuts (per nut) */
-  'Almonds (raw)':1.2,'Almonds (dry roasted)':1.2,'Cashews (raw)':3,
-  'Walnuts (raw, halves)':3.5,'Pecans (raw, halves)':2.5,
-  'Brazil nuts (raw)':5,'Macadamia nuts (raw)':2.5,
-  'Pistachios (dry roasted, shelled)':0.7,'Hazelnuts (dry roasted)':1.5,
-  'Chestnuts (roasted)':8,
-  /* Meat per piece */
-  'Whole egg':50,'Bacon, Canadian style':28,'Bacon, back (grilled)':19,
-};
-/* -- SERVE MODE -- */
-function onUnitChange(){
-  var unit=document.getElementById('servingUnit').value;
-  var hint=document.getElementById('countHint');
-  var hintText=document.getElementById('countHintText');
-  if(unit==='count'){
-    document.getElementById('servingInput').value='1';
-    document.getElementById('servingLabel').textContent='Qty';
-    // Show per-item weight hint if we know the selected food
-    if(selectedFood&&ITEM_WEIGHTS[selectedFood.n]){
-      var gEach=ITEM_WEIGHTS[selectedFood.n];
-      hintText.textContent=selectedFood.n+': ~'+gEach+'g each (based on average size)';
-      hint.style.display='block';
-    } else {
-      hintText.textContent='Tip: select a food from the list first for automatic gram calculation.';
-      hint.style.display='block';
-    }
-  } else {
-    document.getElementById('servingLabel').textContent='Amount';
-    if(unit==='g') document.getElementById('servingInput').value='100';
-    hint.style.display='none';
-  }
-}
 
 /* -- UNIT CONVERSION -- */
 function toGrams(amount,unit){
@@ -1094,8 +978,6 @@ function addFood(){
   document.getElementById('manualF').value='';
   document.getElementById('servingInput').value='100';
   document.getElementById('servingUnit').value='g';
-  document.getElementById('servingLabel').textContent='Amount';
-  document.getElementById('countHint').style.display='none';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(getFoodsForCat(currentCat));
@@ -1241,7 +1123,38 @@ async function aiEstimate(){
 }
 
 /* -- BARCODE -- PHOTO CAPTURE -- */
-/* barcode photo scan removed */
+async function scanBarcodeFromPhoto(evt){
+  const file=evt.target.files[0];
+  if(!file)return;
+  const status=document.getElementById('scannerStatus');
+  status.textContent='Reading barcode from photo...';
+  document.getElementById('barcodeResult').style.display='none';
+  document.getElementById('barcodeStatus').textContent='';
+  try{
+    if(!window.ZXing){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js';
+        s.onload=res;s.onerror=rej;document.head.appendChild(s);
+      });
+    }
+    const img=new window.Image();
+    img.src=URL.createObjectURL(file);
+    await new Promise(res=>{img.onload=res;});
+    const canvas=document.createElement('canvas');
+    canvas.width=img.width;canvas.height=img.height;
+    canvas.getContext('2d').drawImage(img,0,0);
+    const reader=new ZXing.BrowserMultiFormatReader();
+    const result=await reader.decodeFromCanvas(canvas);
+    const code=result.getText();
+    document.getElementById('barcodeInput').value=code;
+    status.textContent='Barcode found: '+code;
+    lookupBarcode();
+  }catch(e){
+    status.textContent='Could not read barcode. Try better lighting or type the number below.';
+  }
+  evt.target.value='';
+}
 let scannerStream=null,scannerActive=false,scannerRAF=null;
 
 async function startScanner(){
@@ -1370,26 +1283,17 @@ function closeModal(type){
     document.getElementById('editP').value='';
     document.getElementById('editF').value='';
   }
-  if(type==='customEdit'){
-    document.getElementById('cfEditName').value='';
-    document.getElementById('cfEditP').value='';
-    document.getElementById('cfEditF').value='';
-    document.getElementById('cfEditServingG').value='';
-    document.getElementById('cfEditNote').textContent='';
-    document.getElementById('customEditModal').classList.remove('open');
-  }
   if(type==='customFood'){
     document.getElementById('cfName').value='';
+    document.getElementById('cfAmt').value='';
+    document.getElementById('cfUnit').value='g';
     document.getElementById('cfP').value='';
     document.getElementById('cfF').value='';
-    document.getElementById('cfServingG').value='';
-    document.getElementById('cfServingP').value='';
-    document.getElementById('cfServingF').value='';
-    cfMode='per100';
-    document.getElementById('cfPer100').style.display='block';
-    document.getElementById('cfPerServing').style.display='none';
-    document.querySelectorAll('#customFoodModal .serve-mode-btn').forEach(function(b){b.classList.remove('active');});
-    document.getElementById('cfMode100').classList.add('active');
+  }
+  if(type==='customEdit'){
+    var cm=document.getElementById('customEditModal');if(cm)cm.classList.remove('open');
+    ['cfEditName','cfEditAmt','cfEditP','cfEditF'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var cu=document.getElementById('cfEditUnit');if(cu)cu.value='g';
   }
 }
 
@@ -1404,41 +1308,21 @@ function setView(view,el){
 
 /* -- IMPORT DATA -- */
 /* -- MY FOODS -- */
-var cfMode='per100';
-function setCfMode(mode,el){
-  cfMode=mode;
-  document.querySelectorAll('#customFoodModal .serve-mode-btn').forEach(function(b){b.classList.remove('active');});
-  el.classList.add('active');
-  document.getElementById('cfPer100').style.display=mode==='per100'?'block':'none';
-  document.getElementById('cfPerServing').style.display=mode==='serving'?'block':'none';
-}
 function saveCustomFood(){
   var name=document.getElementById('cfName').value.trim();
   if(!name){toast('Enter a food name');return;}
-  var p,f;
-  if(cfMode==='serving'){
-    var sg=parseFloat(document.getElementById('cfServingG').value)||0;
-    var sp=parseFloat(document.getElementById('cfServingP').value)||0;
-    var sf=parseFloat(document.getElementById('cfServingF').value)||0;
-    if(!sg){toast('Enter serving size in grams');return;}
-    if(!sp&&!sf){toast('Enter protein or fibre value');return;}
-    // Convert to per-100g
-    p=r1(sp/sg*100);
-    f=r1(sf/sg*100);
-  } else {
-    p=parseFloat(document.getElementById('cfP').value)||0;
-    f=parseFloat(document.getElementById('cfF').value)||0;
-    if(!p&&!f){toast('Enter protein or fibre value');return;}
-  }
+  var amt=parseFloat(document.getElementById('cfAmt').value)||0;
+  var unit=document.getElementById('cfUnit').value;
+  var p=parseFloat(document.getElementById('cfP').value)||0;
+  var f=parseFloat(document.getElementById('cfF').value)||0;
+  if(!amt){toast('Enter a serving size amount');return;}
+  if(!p&&!f){toast('Enter protein or fibre value');return;}
+  var grams=unit==='count'?amt:toGrams(amt,unit);
+  var p100=r1(p/grams*100);
+  var f100=r1(f/grams*100);
   var custom=getCustomFoods();
   if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
-  var entry={n:name,p:p,f:f,custom:true,added:Date.now(),cfMode:cfMode};
-  if(cfMode==='serving'){
-    entry.servingG=parseFloat(document.getElementById('cfServingG').value)||100;
-    entry.servingP=parseFloat(document.getElementById('cfServingP').value)||0;
-    entry.servingF=parseFloat(document.getElementById('cfServingF').value)||0;
-  }
-  custom.push(entry);
+  custom.push({n:name,p:p100,f:f100,custom:true,added:Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f});
   saveCustomFoods(custom);
   closeModal('customFood');
   renderCats();
@@ -1447,54 +1331,29 @@ function saveCustomFood(){
 function openEditCustomFood(food){
   document.getElementById('cfEditId').value=food.n;
   document.getElementById('cfEditName').value=food.n;
-  // Restore original entry values if saved as per-serving
-  if(food.cfMode==='serving'&&food.servingG){
-    document.getElementById('cfEditP').value=food.servingP||0;
-    document.getElementById('cfEditF').value=food.servingF||0;
-    document.getElementById('cfEditServingG').value=food.servingG;
-    document.getElementById('cfEditNote').textContent='Entered as: '+food.servingP+'g protein, '+food.servingF+'g fibre per '+food.servingG+'g serving';
-  } else {
-    document.getElementById('cfEditP').value=food.p;
-    document.getElementById('cfEditF').value=food.f;
-    document.getElementById('cfEditServingG').value='';
-    document.getElementById('cfEditNote').textContent='Values shown are per 100g';
-  }
+  document.getElementById('cfEditAmt').value=food.origAmt||100;
+  document.getElementById('cfEditUnit').value=food.origUnit||'g';
+  document.getElementById('cfEditP').value=food.origP!=null?food.origP:food.p;
+  document.getElementById('cfEditF').value=food.origF!=null?food.origF:food.f;
   document.getElementById('customEditModal').classList.add('open');
 }
 function saveEditCustomFood(){
   var oldName=document.getElementById('cfEditId').value;
   var name=document.getElementById('cfEditName').value.trim();
-  var rawP=parseFloat(document.getElementById('cfEditP').value)||0;
-  var rawF=parseFloat(document.getElementById('cfEditF').value)||0;
-  var sg=parseFloat(document.getElementById('cfEditServingG').value)||0;
+  var amt=parseFloat(document.getElementById('cfEditAmt').value)||0;
+  var unit=document.getElementById('cfEditUnit').value;
+  var p=parseFloat(document.getElementById('cfEditP').value)||0;
+  var f=parseFloat(document.getElementById('cfEditF').value)||0;
   if(!name){toast('Enter a food name');return;}
-  if(!rawP&&!rawF){toast('Enter protein or fibre value');return;}
-  var p,f,entry;
+  if(!amt){toast('Enter a serving size');return;}
+  if(!p&&!f){toast('Enter protein or fibre value');return;}
+  var grams=unit==='count'?amt:toGrams(amt,unit);
+  var p100=r1(p/grams*100);
+  var f100=r1(f/grams*100);
   var oldFood=getCustomFoods().find(function(fd){return fd.n===oldName;})||{};
-  if(sg){
-    // User provided a serving size - treat as per-serving
-    p=r1(rawP/sg*100);
-    f=r1(rawF/sg*100);
-    entry={n:name,p:p,f:f,custom:true,added:oldFood.added||Date.now(),cfMode:'serving',servingG:sg,servingP:rawP,servingF:rawF};
-  } else {
-    p=rawP; f=rawF;
-    entry={n:name,p:p,f:f,custom:true,added:oldFood.added||Date.now(),cfMode:'per100'};
-  }
-  var custom=getCustomFoods().map(function(fd){
-    return fd.n===oldName?entry:fd;
-  });
-  saveCustomFoods(custom);
-  closeModal('customEdit');
-  renderCats();
-  renderFoodList(getFoodsForCat(currentCat));
-  toast(name+' updated OK');
-}
-function clearAllMyFoods(){
-  if(!confirm('Remove all foods from My Foods?'))return;
-  saveCustomFoods([]);
-  renderCats();
-  renderFoodList(getFoodsForCat(currentCat));
-  toast('My Foods cleared');
+  var entry={n:name,p:p100,f:f100,custom:true,added:oldFood.added||Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f};
+  saveCustomFoods(getCustomFoods().map(function(fd){return fd.n===oldName?entry:fd;}));
+  closeModal('customEdit');renderCats();renderFoodList(getFoodsForCat(currentCat));toast(name+' updated OK');
 }
 function deleteCustomFood(name){
   saveCustomFoods(getCustomFoods().filter(function(f){return f.n!==name;}));
@@ -1585,7 +1444,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='searchInput')aiEstimate();
   if(e.key==='Enter'&&e.target.id==='barcodeInput')lookupBarcode();
-  if(e.key==='Escape'){closeModal('barcode');closeModal('edit');closeModal('customFood');closeModal('customEdit');}
+  if(e.key==='Escape'){closeModal('barcode');closeModal('edit');closeModal('customFood');}
 });
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 
@@ -1606,14 +1465,23 @@ var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleD
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="cfEditName" type="text" placeholder="Food name"/>
       </div>
-      <div id="cfEditNote" style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic;"></div>
-      <div class="manual-grid" style="margin-bottom:8px;">
-        <div class="field-wrap p"><label>Protein</label><input class="num-input" id="cfEditP" type="number" min="0" max="500" step="0.5"/></div>
-        <div class="field-wrap f"><label>Fibre</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size</label>
+        <div style="display:flex;gap:6px;">
+          <input class="num-input" id="cfEditAmt" type="number" placeholder="100" min="0.1" max="9999" step="0.1" style="flex:1;"/>
+          <select id="cfEditUnit" style="padding:9px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:600;outline:none;">
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="oz">oz</option>
+            <option value="tbsp">tbsp</option>
+            <option value="tsp">tsp</option>
+            <option value="count">count (each)</option>
+          </select>
+        </div>
       </div>
-      <div style="margin-bottom:14px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size (g) — leave blank if values are per 100g</label>
-        <input class="num-input" id="cfEditServingG" type="number" placeholder="e.g. 250" min="1" max="9999" step="1" style="width:100%;"/>
+      <div class="manual-grid" style="margin-bottom:16px;">
+        <div class="field-wrap p"><label>Protein for this serving</label><input class="num-input" id="cfEditP" type="number" min="0" max="500" step="0.5"/></div>
+        <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
       </div>
       <button class="modal-btn primary" onclick="saveEditCustomFood()" style="margin-bottom:8px;">Save changes</button>
       <button class="modal-btn secondary" onclick="closeModal('customEdit')">Cancel</button>
