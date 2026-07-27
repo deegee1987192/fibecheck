@@ -220,38 +220,23 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         </div>
       </div>
     </div>
-    <div class="add-strip" style="flex-direction:column;gap:8px;">
-      <div style="display:flex;gap:6px;width:100%;">
-        <button class="serve-mode-btn active" id="smGrams" onclick="setServeMode('grams',this)">By weight</button>
-        <button class="serve-mode-btn" id="smCount" onclick="setServeMode('count',this)">By count</button>
-        <button class="serve-mode-btn" id="smServing" onclick="setServeMode('serving',this)">By serving</button>
+    <div class="add-strip">
+      <div class="serving-wrap">
+        <span class="serving-label" id="servingLabel">Amount</span>
+        <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
+        <select id="servingUnit" onchange="onUnitChange()" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
+          <option value="g">g</option>
+          <option value="count">count</option>
+          <option value="oz">oz</option>
+          <option value="lbs">lbs</option>
+          <option value="tbsp">tbsp</option>
+          <option value="tsp">tsp</option>
+        </select>
       </div>
-      <div style="display:flex;gap:8px;width:100%;align-items:center;">
-        <div id="serveModeGrams" style="display:flex;align-items:center;gap:5px;flex:1;">
-          <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
-          <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
-            <option value="g">g</option>
-            <option value="oz">oz</option>
-            <option value="lbs">lbs</option>
-            <option value="tbsp">tbsp</option>
-            <option value="tsp">tsp</option>
-          </select>
-        </div>
-        <div id="serveModeCount" style="display:none;align-items:center;gap:5px;flex:1;">
-          <input class="serving-input" id="countInput" type="number" value="1" min="0.5" max="99" step="0.5" style="width:60px;"/>
-          <span style="font-size:13px;color:var(--muted);">x</span>
-          <input class="serving-input" id="countGrams" type="number" value="50" min="1" max="999" step="1" style="width:65px;"/>
-          <span style="font-size:12px;color:var(--muted);">g each</span>
-        </div>
-        <div id="serveModeServing" style="display:none;align-items:center;gap:5px;flex:1;">
-          <input class="serving-input" id="servingCount" type="number" value="1" min="0.5" max="99" step="0.5" style="width:60px;"/>
-          <span style="font-size:13px;color:var(--muted);">serving(s)</span>
-          <span style="font-size:12px;color:var(--muted);">=</span>
-          <input class="serving-input" id="servingGrams" type="number" value="100" min="1" max="999" step="1" style="width:65px;"/>
-          <span style="font-size:12px;color:var(--muted);">g</span>
-        </div>
-        <button class="add-btn" style="flex:0 0 auto;padding:9px 16px;" onclick="addFood()">+ Add</button>
-      </div>
+      <button class="add-btn" onclick="addFood()">+ Add</button>
+    </div>
+    <div id="countHint" style="display:none;padding:6px 14px 8px;font-size:12px;color:var(--muted);background:var(--surface2);">
+      <span id="countHintText"></span>
     </div>
   </div>
 
@@ -903,18 +888,89 @@ function selectFoodItem(name,p,f,row){
   document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
   if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
+  // If count mode active, refresh hint with this food's per-item weight
+  var unit=document.getElementById('servingUnit').value;
+  if(unit==='count'){
+    var hint=document.getElementById('countHint');
+    var hintText=document.getElementById('countHintText');
+    if(ITEM_WEIGHTS[name]){
+      hintText.textContent=name+': ~'+ITEM_WEIGHTS[name]+'g each (average)';
+    } else {
+      hintText.textContent='No per-item weight for this food. Count will use 100g per item.';
+    }
+    hint.style.display='block';
+  }
 }
 function selectFood(el,name,p,f){selectFoodItem(name,p,f,el);}
 
+
+/* -- PER-ITEM WEIGHTS (grams per single item) -- */
+var ITEM_WEIGHTS={
+  /* Fruit */
+  'Apple (raw, with skin)':182,'Apple (raw, without skin)':182,'Banana (raw)':118,
+  'Orange (navel, raw)':131,'Orange (blood, raw)':131,'Mandarin / clementine (raw)':74,
+  'Tangerine (raw)':84,'Grapefruit (raw, pink)':246,'Lemon (raw, without peel)':84,
+  'Lime (raw)':67,'Kumquat (raw)':19,'Strawberries (raw)':12,
+  'Blueberries (raw)':1.4,'Raspberries (raw)':4,'Blackberries (raw)':5,
+  'Cherries, sweet (raw)':8,'Grapes, red/purple (raw)':5,'Grapes, green/white (raw)':5,
+  'Watermelon (raw)':286,'Cantaloupe / rockmelon (raw)':140,'Kiwi fruit (raw, green)':69,
+  'Kiwi fruit (raw, gold)':69,'Pear (raw, with skin)':178,'Peach (raw)':150,
+  'Nectarine (raw)':142,'Plum (raw)':66,'Apricot (raw)':35,
+  'Fig (raw)':50,'Date, Medjool (raw)':24,'Mango (raw)':207,
+  'Avocado':150,'Persimmon (raw, Hachiya)':168,'Persimmon (raw, Fuyu)':168,
+  'Pomegranate (raw arils)':282,'Lychee (raw)':10,'Dragon fruit / pitaya (raw, red)':300,
+  'Star fruit / carambola (raw)':91,'Guava (raw)':90,'Passion fruit (raw)':18,
+  'Quince (raw)':92,'Plantain (raw)':179,'Papaya (raw)':304,
+  /* Vegetables */
+  'Broccoli (raw)':91,'Broccoli (steamed)':91,'Cauliflower (raw)':588,
+  'Brussels sprouts (cooked)':21,'Brussels sprouts (raw)':21,
+  'Carrots (raw)':61,'Kale (raw)':67,'Spinach (raw)':30,
+  'Corn, sweet (cooked)':77,'Sweet potato (baked)':114,'Potato, Russet (baked with skin)':173,
+  'Potato, white (baked)':150,'Beets / beetroot (cooked)':82,
+  'Artichoke (cooked)':120,'Asparagus (cooked)':16,'Tomato (raw)':123,
+  'Cherry tomatoes (raw)':17,'Bell pepper, green (raw)':119,'Bell pepper, red (raw)':119,
+  'Jalapeno (raw)':14,'Cucumber (raw)':201,'Zucchini / courgette (raw)':196,
+  'Eggplant / aubergine (cooked)':458,'Onion (raw)':110,'Red onion (raw)':110,
+  'Celery (raw)':40,'Avocado':150,'Green beans / French beans (cooked)':8,
+  'Mushrooms, white (raw)':18,'Portobello mushroom (grilled)':84,
+  'Pumpkin (cooked)':900,'Butternut squash (baked)':600,
+  'Leeks (cooked)':89,'Parsnip (cooked)':84,'Turnip (cooked)':122,
+  'Radish (raw)':4.5,'Fennel (raw)':234,
+  /* Eggs & Dairy */
+  'Whole egg':50,'Hard-boiled egg':50,'Scrambled eggs (plain)':61,
+  'Egg whites':30,'Egg yolk (raw)':17,
+  'Egg, duck (whole)':70,'Egg, quail (whole)':9,'Egg, goose (whole)':144,
+  /* Nuts (per nut) */
+  'Almonds (raw)':1.2,'Almonds (dry roasted)':1.2,'Cashews (raw)':3,
+  'Walnuts (raw, halves)':3.5,'Pecans (raw, halves)':2.5,
+  'Brazil nuts (raw)':5,'Macadamia nuts (raw)':2.5,
+  'Pistachios (dry roasted, shelled)':0.7,'Hazelnuts (dry roasted)':1.5,
+  'Chestnuts (roasted)':8,
+  /* Meat per piece */
+  'Whole egg':50,'Bacon, Canadian style':28,'Bacon, back (grilled)':19,
+};
 /* -- SERVE MODE -- */
-var currentServeMode='grams';
-function setServeMode(mode,el){
-  currentServeMode=mode;
-  document.querySelectorAll('.serve-mode-btn').forEach(function(b){b.classList.remove('active');});
-  el.classList.add('active');
-  document.getElementById('serveModeGrams').style.display=mode==='grams'?'flex':'none';
-  document.getElementById('serveModeCount').style.display=mode==='count'?'flex':'none';
-  document.getElementById('serveModeServing').style.display=mode==='serving'?'flex':'none';
+function onUnitChange(){
+  var unit=document.getElementById('servingUnit').value;
+  var hint=document.getElementById('countHint');
+  var hintText=document.getElementById('countHintText');
+  if(unit==='count'){
+    document.getElementById('servingInput').value='1';
+    document.getElementById('servingLabel').textContent='Qty';
+    // Show per-item weight hint if we know the selected food
+    if(selectedFood&&ITEM_WEIGHTS[selectedFood.n]){
+      var gEach=ITEM_WEIGHTS[selectedFood.n];
+      hintText.textContent=selectedFood.n+': ~'+gEach+'g each (based on average size)';
+      hint.style.display='block';
+    } else {
+      hintText.textContent='Tip: select a food from the list first for automatic gram calculation.';
+      hint.style.display='block';
+    }
+  } else {
+    document.getElementById('servingLabel').textContent='Amount';
+    if(unit==='g') document.getElementById('servingInput').value='100';
+    hint.style.display='none';
+  }
 }
 
 /* -- UNIT CONVERSION -- */
@@ -981,10 +1037,8 @@ function addFood(){
   document.getElementById('manualF').value='';
   document.getElementById('servingInput').value='100';
   document.getElementById('servingUnit').value='g';
-  document.getElementById('countInput').value='1';
-  document.getElementById('countGrams').value='50';
-  document.getElementById('servingCount').value='1';
-  document.getElementById('servingGrams').value='100';
+  document.getElementById('servingLabel').textContent='Amount';
+  document.getElementById('countHint').style.display='none';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(getFoodsForCat(currentCat));
