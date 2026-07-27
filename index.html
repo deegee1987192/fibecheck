@@ -224,6 +224,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <input class="serving-input" id="servingInput" type="number" value="100" min="0.1" max="9999" step="any"/>
         <select id="servingUnit" style="padding:7px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600;outline:none;">
           <option value="g">g</option>
+          <option value="count">count</option>
+          <option value="ml">ml</option>
           <option value="oz">oz</option>
           <option value="lbs">lbs</option>
           <option value="tbsp">tbsp</option>
@@ -889,8 +891,8 @@ function renderFoodList(foods){
     var servingLabel=food.origAmt?(food.origAmt+food.origUnit+' serving'):'per 100g';
     var inner='<div><div class="food-name">'+food.n+'</div><div class="food-per">'+servingLabel+'</div></div>'
       +'<div style="display:flex;gap:4px;align-items:center;">'
-      +'<span class="pill pill-p">'+food.origP!=null?food.origP+'g P':food.p+'g P</span>'
-      +'<span class="pill pill-f">'+food.origF!=null?food.origF+'g F':food.f+'g F</span>'
+      +'<span class="pill pill-p">'+(food.origP!=null?food.origP:food.p)+'g P</span>'
+      +'<span class="pill pill-f">'+(food.origF!=null?food.origF:food.f)+'g F</span>'
       +(food.custom?'<button class="cfeditb" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:0 2px;font-weight:700;">edit</button>':'')
       +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 2px;">x</button>':'')
       +'</div>';
