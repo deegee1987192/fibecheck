@@ -969,12 +969,16 @@ function renderToday(){
   const goals=getGoals();
   const totalP=r1(entries.reduce((s,e)=>s+(e.p||0),0));
   const totalF=r1(entries.reduce((s,e)=>s+(e.f||0),0));
+  const totalCal=Math.round(entries.reduce((s,e)=>s+(e.cal||0),0));
   document.getElementById('totalP').textContent=totalP;
   document.getElementById('totalF').textContent=totalF;
-  document.getElementById('labelP').textContent=`of ${goals.p}g goal`;
-  document.getElementById('labelF').textContent=`of ${goals.f}g goal`;
+  document.getElementById('totalCal').textContent=totalCal;
+  document.getElementById('labelP').textContent='of '+goals.p+'g goal';
+  document.getElementById('labelF').textContent='of '+goals.f+'g goal';
+  document.getElementById('labelCal').textContent='of '+(goals.cal||2000)+' kcal goal';
   document.getElementById('barP').style.width=Math.min(100,totalP/goals.p*100)+'%';
   document.getElementById('barF').style.width=Math.min(100,totalF/goals.f*100)+'%';
+  document.getElementById('barCal').style.width=Math.min(100,totalCal/(goals.cal||2000)*100)+'%';
   const list=document.getElementById('logList');
   if(!entries.length){
     list.innerHTML='<div class="empty">Nothing logged yet -- add food above.</div>';
