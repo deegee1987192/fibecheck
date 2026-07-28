@@ -147,6 +147,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .view{display:none;}
 .view.active{display:block;}
 .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;}
+.cal-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.cal-icon{font-size:18px;line-height:1;}
+.cal-info{flex:1;}
+.cal-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.cal-nums{display:flex;align-items:baseline;gap:4px;margin-top:1px;}
+.cal-val{font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#e85d04;}
+.cal-unit{font-size:12px;color:var(--muted);}
+.cal-goal-text{font-size:11px;color:var(--muted);margin-top:2px;}
+.cal-prog{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
+.cal-prog-fill{height:100%;border-radius:2px;background:#e85d04;transition:width .5s ease;}
 </style>
 </head>
 <body>
@@ -186,6 +196,19 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     </div>
   </div>
 
+  <!-- Calorie bar -->
+  <div class="cal-bar">
+    <div class="cal-info">
+      <div class="cal-label">Calories</div>
+      <div class="cal-nums">
+        <span class="cal-val" id="totalCal">0</span>
+        <span class="cal-unit">kcal</span>
+        <span class="cal-unit" id="labelCal" style="margin-left:4px;">of 2000 goal</span>
+      </div>
+      <div class="cal-prog"><div class="cal-prog-fill" id="barCal" style="width:0%"></div></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-head">
       <span class="card-title">Add Food</span>
@@ -215,6 +238,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <div class="manual-grid">
           <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="manualP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
           <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="manualF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
+        </div>
+        <div class="manual-grid">
+          <div class="field-wrap" style="grid-column:1/-1;"><label style="color:#e85d04;">Calories (kcal)</label><input class="num-input" id="manualCal" type="number" placeholder="0" min="0" max="9999" step="1"/></div>
         </div>
       </div>
     </div>
@@ -270,6 +296,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="goals-row">
       <div class="field-wrap p"><label>Protein goal (g)</label><input class="num-input" id="goalP" type="number" placeholder="150" min="10" max="500"/></div>
       <div class="field-wrap f"><label>Fibre goal (g)</label><input class="num-input" id="goalF" type="number" placeholder="30" min="5" max="100"/></div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calorie goal (kcal)</label>
+      <input class="num-input" id="goalCal" type="number" placeholder="2000" min="500" max="9999" style="width:100%;"/>
     </div>
     <button class="add-btn" style="padding:9px 16px;width:auto;" onclick="saveGoals()">Save goals</button>
   </div>
@@ -350,9 +380,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           </select>
         </div>
       </div>
-      <div class="manual-grid" style="margin-bottom:16px;">
+      <div class="manual-grid" style="margin-bottom:8px;">
         <div class="field-wrap p"><label>Protein for this serving</label><input class="num-input" id="cfP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
         <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving (kcal)</label>
+        <input class="num-input" id="cfCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <button class="modal-btn primary" onclick="saveCustomFood()" style="margin-bottom:8px;">Save to My Foods</button>
       <button class="modal-btn secondary" onclick="closeModal('customFood')">Cancel</button>
@@ -373,9 +407,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="editName" type="text" placeholder="Food name"/>
       </div>
-      <div class="manual-grid" style="margin-bottom:10px;">
+      <div class="manual-grid" style="margin-bottom:8px;">
         <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="editP" type="number" min="0" max="500" step="0.5"/></div>
         <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="editF" type="number" min="0" max="200" step="0.5"/></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories (kcal)</label>
+        <input class="num-input" id="editCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <div style="margin-bottom:12px;">
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Meal</label>
@@ -824,7 +862,7 @@ let currentCat='Meat',selectedFood=null,currentPeriod='week',barcodeData=null;
 const K_ENTRIES='fibecheck_entries',K_GOALS='fibecheck_goals',K_CUSTOM='fibecheck_custom';
 function getEntries(){try{return JSON.parse(localStorage.getItem(K_ENTRIES))||[];}catch{return[];}}
 function saveEntries(e){localStorage.setItem(K_ENTRIES,JSON.stringify(e));}
-function getGoals(){try{return JSON.parse(localStorage.getItem(K_GOALS))||{p:150,f:30};}catch{return{p:150,f:30};}}
+function getGoals(){try{return JSON.parse(localStorage.getItem(K_GOALS))||{p:150,f:30,cal:2000};}catch{return{p:150,f:30,cal:2000};}}
 function saveGoalsData(g){localStorage.setItem(K_GOALS,JSON.stringify(g));}
 function getCustomFoods(){try{return JSON.parse(localStorage.getItem(K_CUSTOM))||[];}catch{return[];}}
 function saveCustomFoods(f){localStorage.setItem(K_CUSTOM,JSON.stringify(f));}
@@ -962,13 +1000,15 @@ function addFood(){
   const unit=document.getElementById('servingUnit').value;
   const servingG=r1(toGrams(servingRaw,unit));
   const servingLabel=servingRaw+unit;
-  let name,p,f;
+  let name,p,f,cal;
   if(selectedFood){
     name=selectedFood.n;p=r1(selectedFood.p*servingG/100);f=r1(selectedFood.f*servingG/100);
+    cal=selectedFood.cal100?r1(selectedFood.cal100*servingG/100):0;
   } else {
     name=document.getElementById('searchInput').value.trim();
     p=parseFloat(document.getElementById('manualP').value)||0;
     f=parseFloat(document.getElementById('manualF').value)||0;
+    cal=parseFloat(document.getElementById('manualCal').value)||0;
     if(!name){toast('Enter a food name');return;}
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
@@ -978,6 +1018,7 @@ function addFood(){
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
   document.getElementById('manualF').value='';
+  document.getElementById('manualCal').value='';
   document.getElementById('servingInput').value='100';
   document.getElementById('servingUnit').value='g';
   document.getElementById('manualEntry').style.display='none';
@@ -1075,13 +1116,14 @@ function renderHistory(){
   const nd=days.length||1;
   const totP=r1(entries.reduce((s,e)=>s+(e.p||0),0));
   const totF=r1(entries.reduce((s,e)=>s+(e.f||0),0));
+  const totCal=Math.round(entries.reduce((s,e)=>s+(e.cal||0),0));
   document.getElementById('statGrid').innerHTML=`
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${totP}g</div><div class="stat-lbl">Total protein</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${totF}g</div><div class="stat-lbl">Total fibre</div></div>
-    <div class="stat-box"><div class="stat-val">${days.length}</div><div class="stat-lbl">Days logged</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${totCal}</div><div class="stat-lbl">Total kcal</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${r1(totP/nd)}g</div><div class="stat-lbl">Avg/day P</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${r1(totF/nd)}g</div><div class="stat-lbl">Avg/day F</div></div>
-    <div class="stat-box"><div class="stat-val">${entries.length}</div><div class="stat-lbl">Foods logged</div></div>`;
+    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${Math.round(totCal/nd)}</div><div class="stat-lbl">Avg/day kcal</div></div>`;
   if(!days.length){document.getElementById('histList').innerHTML='<div class="empty">No entries yet.</div>';return;}
   document.getElementById('histList').innerHTML=days.map(date=>{
     const de=byDay[date];
@@ -1102,8 +1144,8 @@ function renderHistory(){
 
 function toggleHistDay(head){head.nextElementSibling.classList.toggle('open');}
 
-function renderGoalsForm(){const g=getGoals();document.getElementById('goalP').value=g.p;document.getElementById('goalF').value=g.f;}
-function saveGoals(){const p=parseInt(document.getElementById('goalP').value)||150;const f=parseInt(document.getElementById('goalF').value)||30;saveGoalsData({p,f});renderToday();toast('Goals saved OK');}
+function renderGoalsForm(){const g=getGoals();document.getElementById('goalP').value=g.p;document.getElementById('goalF').value=g.f;document.getElementById('goalCal').value=g.cal||2000;}
+function saveGoals(){const p=parseInt(document.getElementById('goalP').value)||150;const f=parseInt(document.getElementById('goalF').value)||30;const cal=parseInt(document.getElementById('goalCal').value)||2000;saveGoalsData({p,f,cal});renderToday();toast('Goals saved OK');}
 
 async function aiEstimate(){
   const name=document.getElementById('searchInput').value.trim();
@@ -1246,7 +1288,8 @@ async function lookupBarcode(){
     const p=r1(nutr['proteins_100g']||nutr['proteins']||0);
     const f=r1(nutr['fiber_100g']||nutr['fiber']||0);
     const sname=prod.product_name||prod.product_name_en||'Unknown product';
-    barcodeData={name:sname,p,f};
+    const calPer100=r1((nutr['energy-kcal_100g']||nutr['energy-kcal']||0));
+    barcodeData={name:sname,p,f,cal:calPer100};
     document.getElementById('barcodeProductName').textContent=sname;
     document.getElementById('barcodeP').textContent=`${p}g protein`;
     document.getElementById('barcodeF').textContent=`${f}g fibre`;
@@ -1259,7 +1302,7 @@ async function lookupBarcode(){
 function addFromBarcode(){
   if(!barcodeData)return;
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,serving:100,meal:activeMeal});
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name:barcodeData.name,p:barcodeData.p,f:barcodeData.f,cal:barcodeData.cal||0,serving:100,servingLabel:'100g',meal:activeMeal});
   saveEntries(entries);
   // Auto-save to My Foods
   var cf=getCustomFoods();
@@ -1324,7 +1367,9 @@ function saveCustomFood(){
   var f100=r1(f/grams*100);
   var custom=getCustomFoods();
   if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
-  custom.push({n:name,p:p100,f:f100,custom:true,added:Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f});
+  var calRaw=parseFloat(document.getElementById('cfCal').value)||0;
+  var cal100=r1(calRaw/grams*100);
+  custom.push({n:name,p:p100,f:f100,cal100:cal100,custom:true,added:Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f,origCal:calRaw});
   saveCustomFoods(custom);
   closeModal('customFood');
   renderCats();
@@ -1337,6 +1382,7 @@ function openEditCustomFood(food){
   document.getElementById('cfEditUnit').value=food.origUnit||'g';
   document.getElementById('cfEditP').value=food.origP!=null?food.origP:food.p;
   document.getElementById('cfEditF').value=food.origF!=null?food.origF:food.f;
+  document.getElementById('cfEditCal').value=food.origCal||0;
   document.getElementById('customEditModal').classList.add('open');
 }
 function saveEditCustomFood(){
@@ -1353,7 +1399,9 @@ function saveEditCustomFood(){
   var p100=r1(p/grams*100);
   var f100=r1(f/grams*100);
   var oldFood=getCustomFoods().find(function(fd){return fd.n===oldName;})||{};
-  var entry={n:name,p:p100,f:f100,custom:true,added:oldFood.added||Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f};
+  var calRaw2=parseFloat(document.getElementById('cfEditCal').value)||0;
+  var cal100_2=r1(calRaw2/grams*100);
+  var entry={n:name,p:p100,f:f100,cal100:cal100_2,custom:true,added:oldFood.added||Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f,origCal:calRaw2};
   saveCustomFoods(getCustomFoods().map(function(fd){return fd.n===oldName?entry:fd;}));
   closeModal('customEdit');renderCats();renderFoodList(getFoodsForCat(currentCat));toast(name+' updated OK');
 }
@@ -1411,6 +1459,7 @@ function openEdit(id){
   document.getElementById('editName').value=entry.name;
   document.getElementById('editP').value=entry.p||0;
   document.getElementById('editF').value=entry.f||0;
+  document.getElementById('editCal').value=entry.cal||0;
   editMeal=entry.meal||'Breakfast';
   // Highlight correct meal button
   document.querySelectorAll('#editModal .meal-btn').forEach(b=>{
@@ -1481,9 +1530,13 @@ var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleD
           </select>
         </div>
       </div>
-      <div class="manual-grid" style="margin-bottom:16px;">
+      <div class="manual-grid" style="margin-bottom:8px;">
         <div class="field-wrap p"><label>Protein for this serving</label><input class="num-input" id="cfEditP" type="number" min="0" max="500" step="0.5"/></div>
         <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving (kcal)</label>
+        <input class="num-input" id="cfEditCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <button class="modal-btn primary" onclick="saveEditCustomFood()" style="margin-bottom:8px;">Save changes</button>
       <button class="modal-btn secondary" onclick="closeModal('customEdit')">Cancel</button>
