@@ -860,7 +860,7 @@ function renderFoodList(foods){
       +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 2px;">x</button>':'')
       +'</div>';
     row.innerHTML=inner;
-    row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,row);});
+    row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,food.c||0,row);});
     if(food.custom){
       var eb=row.querySelector('.cfeditb');
       if(eb){(function(fd){eb.addEventListener('click',function(e){e.stopPropagation();openEditCustomFood(fd);});})(food);}
@@ -871,13 +871,13 @@ function renderFoodList(foods){
   });
 }
 
-function selectFoodItem(name,p,f,row){
-  selectedFood={n:name,p:p,f:f};
+function selectFoodItem(name,p,f,cal,row){
+  selectedFood={n:name,p:p,f:f,c:cal||0};
   document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
   if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
 }
-function selectFood(el,name,p,f){selectFoodItem(name,p,f,el);}
+function selectFood(el,name,p,f,cal){selectFoodItem(name,p,f,cal||0,el);}
 
 /* -- UNIT CONVERSION -- */
 function toGrams(amount,unit){
