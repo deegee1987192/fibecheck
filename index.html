@@ -233,14 +233,19 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       </div>
       <div class="cat-row" id="catRow"></div>
       <div class="food-list" id="foodList"></div>
+      <!-- Calorie override - always visible -->
+      <div style="padding:8px 0 4px;border-top:1px solid var(--border);margin-top:8px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories (kcal) <span style="font-weight:400;color:var(--muted);text-transform:none;">— optional, enter if known</span></label>
+        <input class="num-input" id="manualCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
+      </div>
       <div id="manualEntry" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
         <div class="section-label">Manual entry</div>
         <div class="manual-grid">
           <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="manualP" type="number" placeholder="0" min="0" max="500" step="0.5"/></div>
           <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="manualF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
         </div>
-        <div class="manual-grid">
-          <div class="field-wrap" style="grid-column:1/-1;"><label style="color:#e85d04;">Calories (kcal)</label><input class="num-input" id="manualCal" type="number" placeholder="0" min="0" max="9999" step="1"/></div>
+        <div class="manual-grid" style="display:none;">
+          <div class="field-wrap" style="grid-column:1/-1;"><label style="color:#e85d04;">Calories (kcal)</label><input class="num-input" id="manualCalHidden" type="number" placeholder="0" style="display:none;"/></div>
         </div>
       </div>
     </div>
@@ -1003,7 +1008,7 @@ function addFood(){
   let name,p,f,cal;
   if(selectedFood){
     name=selectedFood.n;p=r1(selectedFood.p*servingG/100);f=r1(selectedFood.f*servingG/100);
-    cal=selectedFood.cal100?r1(selectedFood.cal100*servingG/100):0;
+    cal=selectedFood.cal100?r1(selectedFood.cal100*servingG/100):(parseFloat(document.getElementById('manualCal').value)||0);
   } else {
     name=document.getElementById('searchInput').value.trim();
     p=parseFloat(document.getElementById('manualP').value)||0;
@@ -1013,7 +1018,7 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,serving:servingG,servingLabel,meal:activeMeal});
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,cal:cal||0,serving:servingG,servingLabel,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
