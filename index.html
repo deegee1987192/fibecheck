@@ -938,6 +938,8 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
+  console.log('ADDING: cal=',cal,'selectedFood.c=',selectedFood?selectedFood.c:'no selectedFood','manualCal=',document.getElementById('manualCal').value);
+  console.log('[FibeCheck] adding entry: cal='+JSON.stringify(cal)+' selectedFood='+JSON.stringify(selectedFood));
   entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,cal:cal||0,serving:servingG,servingLabel,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
@@ -1298,6 +1300,7 @@ function saveCustomFood(){
   if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
   var calRaw=parseFloat(document.getElementById('cfCal').value)||0;
   var cal100=r1(calRaw/grams*100);
+  console.log('[FibeCheck] saving custom food: cal100='+cal100+' calRaw='+calRaw+' grams='+grams);
   custom.push({n:name,p:p100,f:f100,cal100:cal100,custom:true,added:Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f,origCal:calRaw});
   saveCustomFoods(custom);
   closeModal('customFood');
