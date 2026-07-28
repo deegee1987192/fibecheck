@@ -202,7 +202,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div class="cal-label">Calories</div>
       <div class="cal-nums">
         <span class="cal-val" id="totalCal">0</span>
-        <span class="cal-unit">kcal</span>
+        <span class="cal-unit">cal</span>
         <span class="cal-unit" id="labelCal" style="margin-left:4px;">of 2000 goal</span>
       </div>
       <div class="cal-prog"><div class="cal-prog-fill" id="barCal" style="width:0%"></div></div>
@@ -235,7 +235,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div class="food-list" id="foodList"></div>
       <!-- Calorie field - auto-filled from database, overrideable -->
       <div style="padding:8px 0 4px;border-top:1px solid var(--border);margin-top:8px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories (kcal) <span id="calAutoNote" style="font-weight:400;color:var(--muted);text-transform:none;font-style:italic;"></span></label>
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories <span id="calAutoNote" style="font-weight:400;color:var(--muted);text-transform:none;font-style:italic;"></span></label>
         <input class="num-input" id="manualCal" type="number" placeholder="auto from database" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <div id="manualEntry" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
@@ -245,7 +245,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="manualF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
         </div>
         <div class="manual-grid" style="display:none;">
-          <div class="field-wrap" style="grid-column:1/-1;"><label style="color:#e85d04;">Calories (kcal)</label><input class="num-input" id="manualCalHidden" type="number" placeholder="0" style="display:none;"/></div>
+          <div class="field-wrap" style="grid-column:1/-1;"><label style="color:#e85d04;">Calories</label><input class="num-input" id="manualCalHidden" type="number" placeholder="0" style="display:none;"/></div>
         </div>
       </div>
     </div>
@@ -303,7 +303,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div class="field-wrap f"><label>Fibre goal (g)</label><input class="num-input" id="goalF" type="number" placeholder="30" min="5" max="100"/></div>
     </div>
     <div style="margin-bottom:10px;">
-      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calorie goal (kcal)</label>
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calorie goal (cal)</label>
       <input class="num-input" id="goalCal" type="number" placeholder="2000" min="500" max="9999" style="width:100%;"/>
     </div>
     <button class="add-btn" style="padding:9px 16px;width:auto;" onclick="saveGoals()">Save goals</button>
@@ -390,7 +390,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfF" type="number" placeholder="0" min="0" max="200" step="0.5"/></div>
       </div>
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving (kcal)</label>
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving</label>
         <input class="num-input" id="cfCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <button class="modal-btn primary" onclick="saveCustomFood()" style="margin-bottom:8px;">Save to My Foods</button>
@@ -417,7 +417,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="editF" type="number" min="0" max="200" step="0.5"/></div>
       </div>
       <div style="margin-bottom:10px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories (kcal)</label>
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories</label>
         <input class="num-input" id="editCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <div style="margin-bottom:12px;">
@@ -977,7 +977,7 @@ function renderToday(){
   document.getElementById('totalCal').textContent=totalCal;
   document.getElementById('labelP').textContent='of '+goals.p+'g goal';
   document.getElementById('labelF').textContent='of '+goals.f+'g goal';
-  document.getElementById('labelCal').textContent='of '+(goals.cal||2000)+' kcal goal';
+  document.getElementById('labelCal').textContent='of '+(goals.cal||2000)+' cal goal';
   document.getElementById('barP').style.width=Math.min(100,totalP/goals.p*100)+'%';
   document.getElementById('barF').style.width=Math.min(100,totalF/goals.f*100)+'%';
   document.getElementById('barCal').style.width=Math.min(100,totalCal/(goals.cal||2000)*100)+'%';
@@ -1051,10 +1051,10 @@ function renderHistory(){
   document.getElementById('statGrid').innerHTML=`
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${totP}g</div><div class="stat-lbl">Total protein</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${totF}g</div><div class="stat-lbl">Total fibre</div></div>
-    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${totCal}</div><div class="stat-lbl">Total kcal</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${totCal}</div><div class="stat-lbl">Total cal</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${r1(totP/nd)}g</div><div class="stat-lbl">Avg/day P</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${r1(totF/nd)}g</div><div class="stat-lbl">Avg/day F</div></div>
-    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${Math.round(totCal/nd)}</div><div class="stat-lbl">Avg/day kcal</div></div>`;
+    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${Math.round(totCal/nd)}</div><div class="stat-lbl">Avg/day cal</div></div>`;
   if(!days.length){document.getElementById('histList').innerHTML='<div class="empty">No entries yet.</div>';return;}
   document.getElementById('histList').innerHTML=days.map(date=>{
     const de=byDay[date];
@@ -1219,7 +1219,7 @@ async function lookupBarcode(){
     const p=r1(nutr['proteins_100g']||nutr['proteins']||0);
     const f=r1(nutr['fiber_100g']||nutr['fiber']||0);
     const sname=prod.product_name||prod.product_name_en||'Unknown product';
-    const calPer100=r1((nutr['energy-kcal_100g']||nutr['energy-kcal']||0));
+    const calPer100=r1((nutr['energy-cal_100g']||nutr['energy-cal']||0));
     barcodeData={name:sname,p,f,cal:calPer100};
     document.getElementById('barcodeProductName').textContent=sname;
     document.getElementById('barcodeP').textContent=`${p}g protein`;
@@ -1467,7 +1467,7 @@ var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleD
         <div class="field-wrap f"><label>Fibre for this serving</label><input class="num-input" id="cfEditF" type="number" min="0" max="200" step="0.5"/></div>
       </div>
       <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving (kcal)</label>
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories for this serving</label>
         <input class="num-input" id="cfEditCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <button class="modal-btn primary" onclick="saveEditCustomFood()" style="margin-bottom:8px;">Save changes</button>
