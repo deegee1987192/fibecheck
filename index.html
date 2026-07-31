@@ -257,6 +257,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           <option value="g">g</option>
           <option value="count">count</option>
           <option value="ml">ml</option>
+          <option value="cup">cup</option>
+          <option value="serving">serving</option>
           <option value="oz">oz</option>
           <option value="lbs">lbs</option>
           <option value="tbsp">tbsp</option>
@@ -344,13 +346,30 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div id="barcodeStatus" class="ai-status"></div>
       <div id="barcodeResult" style="display:none;">
         <div class="result-box">
-          <div class="result-name" id="barcodeProductName"></div>
-          <div style="display:flex;gap:8px;"><span class="pill pill-p" id="barcodeP"></span><span class="pill pill-f" id="barcodeF"></span></div>
-          <div class="result-note" id="barcodeServing"></div>
+          <div class="result-name" id="barcodeProductName" style="margin-bottom:10px;font-size:14px;font-weight:700;"></div>
+          <div style="margin-bottom:8px;">
+            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size</label>
+            <div style="display:flex;gap:6px;">
+              <input class="num-input" id="barcodeServingAmt" type="number" value="100" min="1" max="9999" step="1" style="flex:1;"/>
+              <select id="barcodeServingUnit" style="padding:9px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:600;outline:none;">
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+                <option value="oz">oz</option>
+              </select>
+            </div>
+            <div id="barcodeServing" style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;"></div>
+          </div>
+          <div class="manual-grid" style="margin-bottom:8px;">
+            <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="barcodePInput" type="number" min="0" max="500" step="0.5"/></div>
+            <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="barcodeFInput" type="number" min="0" max="500" step="0.5"/></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories</label>
+            <input class="num-input" id="barcodeCInput" type="number" min="0" max="9999" step="1" style="width:100%;"/>
+          </div>
         </div>
-        <button class="modal-btn primary" onclick="addFromBarcode()">Add to today</button>
-      </div>
-      <button class="modal-btn secondary" onclick="closeModal('barcode')" style="margin-top:8px;">Cancel</button>
+        <button class="modal-btn primary" onclick="addFromBarcode()" style="margin-bottom:8px;">Add to today</button>
+            <button class="modal-btn secondary" onclick="closeModal('barcode')" style="margin-top:8px;">Cancel</button>
     </div>
   </div>
 </div>
@@ -457,327 +476,453 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 ======================================= */
 const FOODS={
 Meat:[
-  {n:"Chicken breast, skinless, roasted",p:31.0,f:0,c:165},{n:"Turkey breast, roasted",p:29.9,f:0,c:135},
-  {n:"Chicken thigh, skinless, roasted",p:25.9,f:0,c:209},{n:"Chicken drumstick, skinless",p:24.2,f:0,c:172},
-  {n:"Chicken wing, roasted",p:26.9,f:0,c:203},{n:"Ground chicken (cooked)",p:25.7,f:0,c:187},
-  {n:"Ground turkey, 93% lean",p:27.4,f:0,c:189},{n:"Turkey mince (cooked)",p:28.6,f:0,c:189},
-  {n:"Turkey leg, roasted",p:28.6,f:0,c:208},{n:"Duck breast, roasted",p:23.5,f:0,c:201},
-  {n:"Beef sirloin steak (grilled)",p:27.0,f:0,c:207},{n:"Lean beef mince, extra lean",p:26.1,f:0,c:218},
-  {n:"Beef ribeye steak (grilled)",p:24.6,f:0,c:291},{n:"Beef tenderloin (roasted)",p:28.2,f:0,c:219},
-  {n:"Beef flank steak (grilled)",p:27.4,f:0,c:192},{n:"Beef brisket (braised)",p:26.4,f:0,c:298},
-  {n:"Beef liver (pan-fried)",p:26.4,f:0,c:175},{n:"Beef top round (roasted)",p:30.4,f:0,c:195},
-  {n:"Beef bottom round (braised)",p:30.8,f:0,c:218},{n:"Beef short ribs (braised)",p:19.8,f:0,c:381},
-  {n:"Pork tenderloin (roasted)",p:26.2,f:0,c:143},{n:"Pork loin chop (grilled)",p:25.9,f:0,c:200},
-  {n:"Pork shoulder (roasted)",p:22.4,f:0,c:263},{n:"Ground pork (cooked)",p:25.7,f:0,c:297},
-  {n:"Pork back ribs (roasted)",p:24.2,f:0,c:292},{n:"Pork belly (braised)",p:16.1,f:0,c:518},
-  {n:"Ham, extra lean (roasted)",p:21.7,f:0,c:145},{n:"Bacon, Canadian style",p:20.1,f:0,c:185},
-  {n:"Bacon, back (grilled)",p:22.0,f:0,c:417},{n:"Pepperoni (sliced)",p:19.3,f:0,c:494},
-  {n:"Salami (hard)",p:22.6,f:0,c:407},{n:"Chorizo (cooked)",p:24.1,f:0,c:455},
-  {n:"Lamb leg (roasted)",p:28.3,f:0,c:191},{n:"Lamb shoulder (braised)",p:25.7,f:0,c:300},
-  {n:"Lamb loin chop (grilled)",p:26.0,f:0,c:235},{n:"Ground lamb (cooked)",p:25.5,f:0,c:283},
-  {n:"Venison (roasted)",p:30.2,f:0,c:158},{n:"Bison, lean (roasted)",p:28.4,f:0,c:143},
-  {n:"Elk (roasted)",p:30.2,f:0,c:146},{n:"Veal loin (braised)",p:31.2,f:0,c:175},
-  {n:"Veal shoulder (braised)",p:30.7,f:0,c:200},{n:"Rabbit (roasted)",p:29.1,f:0,c:197},
-  {n:"Quail, breast (cooked)",p:28.0,f:0,c:192},{n:"Pheasant, breast (cooked)",p:27.6,f:0,c:181},
-  {n:"Goat (roasted)",p:27.1,f:0,c:143},{n:"Deli turkey (sliced)",p:17.7,f:0,c:89},
-  {n:"Deli chicken breast",p:23.0,f:0,c:104},{n:"Deli ham (sliced)",p:17.0,f:0,c:145},
-  {n:"Bologna (beef)",p:12.0,f:0,c:310},{n:"Hot dog, beef",p:11.0,f:0,c:290},
-  {n:"Sausage, Italian (cooked)",p:19.1,f:0,c:301},{n:"Sausage, breakfast (cooked)",p:16.6,f:0,c:339},
-  {n:"Mortadella",p:14.3,f:0,c:311},{n:"Prosciutto",p:25.9,f:0,c:268},
-  {n:"Chicken liver (sauteed)",p:24.5,f:0,c:172},{n:"Beef heart (braised)",p:28.5,f:0,c:175},
-  {n:"Beef kidney (braised)",p:26.2,f:0,c:144},{n:"Pork liver (braised)",p:26.0,f:0,c:165},
-  {n:"Tongue, beef (simmered)",p:23.9,f:0,c:284},{n:"Tripe (simmered)",p:12.1,f:0,c:85},
-  {n:"Ostrich (ground, cooked)",p:28.5,f:0,c:155},{n:"Buffalo/Bison burger",p:25.0,f:0,c:172},
-  {n:"Wild boar (roasted)",p:28.3,f:0,c:160},{n:"Chicken shawarma meat",p:22.0,f:0,c:195},
-  {n:"Ground beef 80/20 (cooked)",p:24.5,f:0,c:254},{n:"Ground beef 90/10 (cooked)",p:26.1,f:0,c:218},
-  {n:"Beef jerky",p:33.2,f:1.8,c:410},{n:"Turkey jerky",p:45.5,f:0,c:336},
-  {n:"Rotisserie chicken, breast",p:29.2,f:0,c:165},{n:"Rotisserie chicken, thigh",p:22.0,f:0,c:205},
-  {n:"Corned beef (canned)",p:24.9,f:0,c:251},{n:"Roast beef (deli)",p:21.5,f:0,c:150},
-  {n:"Chicken sausage (cooked)",p:18.7,f:0,c:196},{n:"Turkey sausage (cooked)",p:20.9,f:0,c:196},
-  {n:"Pork rinds (fried)",p:61.3,f:0,c:544},{n:"Chicken nuggets (baked)",p:15.0,f:0.5,c:220},
-  {n:"Beef patty (grilled)",p:25.8,f:0,c:254},{n:"Lamb chop (grilled)",p:24.6,f:0,c:235},
-  {n:"Chicken breast strips (grilled)",p:30.5,f:0,c:165},{n:"Steak strips (beef)",p:27.0,f:0,c:207},
-  {n:"Smoked turkey breast",p:24.0,f:0,c:117},{n:"Pastrami",p:20.8,f:0,c:230},
-  {n:"Chicken breast, canned",p:24.7,f:0,c:130},{n:"Turkey, canned",p:24.0,f:0,c:130},
-  {n:"Moose (roasted)",p:29.0,f:0,c:134},{n:"Caribou (roasted)",p:29.7,f:0,c:144}
+  {n:"Chicken breast, skinless roasted",srv:"100g",p:31,f:0,c:165},
+  {n:"Turkey breast, roasted",srv:"100g",p:30,f:0,c:135},
+  {n:"Chicken thigh, skinless roasted",srv:"100g",p:26,f:0,c:209},
+  {n:"Chicken drumstick, skinless",srv:"100g",p:24,f:0,c:172},
+  {n:"Ground chicken, cooked",srv:"100g",p:26,f:0,c:187},
+  {n:"Ground turkey 93% lean",srv:"100g",p:27,f:0,c:189},
+  {n:"Turkey leg, roasted",srv:"100g",p:29,f:0,c:208},
+  {n:"Duck breast, roasted",srv:"100g",p:24,f:0,c:201},
+  {n:"Beef sirloin steak, grilled",srv:"100g",p:27,f:0,c:207},
+  {n:"Lean beef mince, cooked",srv:"100g",p:26,f:0,c:218},
+  {n:"Beef ribeye steak, grilled",srv:"100g",p:25,f:0,c:291},
+  {n:"Beef tenderloin, roasted",srv:"100g",p:28,f:0,c:219},
+  {n:"Beef flank steak, grilled",srv:"100g",p:27,f:0,c:192},
+  {n:"Beef brisket, braised",srv:"100g",p:26,f:0,c:298},
+  {n:"Beef liver, pan-fried",srv:"100g",p:26,f:0,c:175},
+  {n:"Ground beef 80/20, cooked",srv:"100g",p:25,f:0,c:254},
+  {n:"Ground beef 90/10, cooked",srv:"100g",p:26,f:0,c:218},
+  {n:"Pork tenderloin, roasted",srv:"100g",p:26,f:0,c:143},
+  {n:"Pork loin chop, grilled",srv:"100g",p:26,f:0,c:200},
+  {n:"Pork shoulder, roasted",srv:"100g",p:22,f:0,c:263},
+  {n:"Ground pork, cooked",srv:"100g",p:26,f:0,c:297},
+  {n:"Pork belly, braised",srv:"100g",p:16,f:0,c:518},
+  {n:"Ham, extra lean roasted",srv:"100g",p:22,f:0,c:145},
+  {n:"Bacon, back grilled",srv:"2 slices (40g)",p:9,f:0,c:167},
+  {n:"Bacon, Canadian style",srv:"2 slices (46g)",p:9,f:0,c:85},
+  {n:"Pepperoni, sliced",srv:"14 slices (28g)",p:5,f:0,c:138},
+  {n:"Salami, hard",srv:"3 slices (30g)",p:7,f:0,c:122},
+  {n:"Chorizo, cooked",srv:"100g",p:24,f:0,c:455},
+  {n:"Lamb leg, roasted",srv:"100g",p:28,f:0,c:191},
+  {n:"Lamb loin chop, grilled",srv:"100g",p:26,f:0,c:235},
+  {n:"Ground lamb, cooked",srv:"100g",p:26,f:0,c:283},
+  {n:"Venison, roasted",srv:"100g",p:30,f:0,c:158},
+  {n:"Bison, lean roasted",srv:"100g",p:28,f:0,c:143},
+  {n:"Veal loin, braised",srv:"100g",p:31,f:0,c:175},
+  {n:"Rabbit, roasted",srv:"100g",p:29,f:0,c:197},
+  {n:"Goat, roasted",srv:"100g",p:27,f:0,c:143},
+  {n:"Deli turkey, sliced",srv:"4 slices (56g)",p:10,f:0,c:50},
+  {n:"Deli chicken breast",srv:"4 slices (56g)",p:13,f:0,c:58},
+  {n:"Deli ham, sliced",srv:"4 slices (56g)",p:10,f:0,c:81},
+  {n:"Bologna, beef",srv:"1 slice (28g)",p:3,f:0,c:87},
+  {n:"Hot dog, beef",srv:"1 hot dog (45g)",p:5,f:0,c:131},
+  {n:"Italian sausage, cooked",srv:"1 link (85g)",p:16,f:0,c:256},
+  {n:"Breakfast sausage, cooked",srv:"2 links (45g)",p:7,f:0,c:153},
+  {n:"Mortadella",srv:"2 slices (46g)",p:7,f:0,c:143},
+  {n:"Prosciutto",srv:"3 slices (30g)",p:8,f:0,c:80},
+  {n:"Chicken liver, sauteed",srv:"100g",p:25,f:0,c:172},
+  {n:"Beef heart, braised",srv:"100g",p:29,f:0,c:175},
+  {n:"Pastrami",srv:"3 slices (57g)",p:12,f:0,c:131},
+  {n:"Beef jerky",srv:"1 oz (28g)",p:9,f:0.5,c:115},
+  {n:"Turkey jerky",srv:"1 oz (28g)",p:13,f:0,c:94},
+  {n:"Rotisserie chicken, breast",srv:"half breast (140g)",p:41,f:0,c:231},
+  {n:"Rotisserie chicken, thigh",srv:"1 thigh (100g)",p:22,f:0,c:205},
+  {n:"Corned beef, canned",srv:"100g",p:25,f:0,c:251},
+  {n:"Chicken sausage, cooked",srv:"1 link (85g)",p:16,f:0,c:167},
+  {n:"Turkey sausage, cooked",srv:"1 link (85g)",p:18,f:0,c:167},
+  {n:"Pork rinds, fried",srv:"1 oz (28g)",p:17,f:0,c:153},
+  {n:"Chicken nuggets, baked",srv:"6 pieces (90g)",p:14,f:0.5,c:198},
+  {n:"Chicken breast strips, grilled",srv:"100g",p:31,f:0,c:165},
+  {n:"Smoked turkey breast",srv:"4 slices (56g)",p:13,f:0,c:66}
 ],
 Fish:[
-  {n:"Atlantic salmon (baked)",p:25.4,f:0,c:206},{n:"Sockeye salmon (baked)",p:25.7,f:0,c:169},
-  {n:"Pink salmon (canned in water)",p:19.8,f:0,c:118},{n:"Canned tuna in water",p:25.5,f:0,c:116},
-  {n:"Canned tuna in oil (drained)",p:23.6,f:0,c:198},{n:"Albacore tuna (canned)",p:27.0,f:0,c:145},
-  {n:"Fresh tuna steak (grilled)",p:30.1,f:0,c:184},{n:"Atlantic cod (baked)",p:22.8,f:0,c:105},
-  {n:"Pacific cod (baked)",p:22.6,f:0,c:105},{n:"Haddock (baked)",p:23.8,f:0,c:112},
-  {n:"Tilapia (baked)",p:26.2,f:0,c:128},{n:"Pollock (baked)",p:23.6,f:0,c:111},
-  {n:"Mahi-mahi (baked)",p:23.7,f:0,c:109},{n:"Halibut (baked)",p:23.2,f:0,c:140},
-  {n:"Rainbow trout (baked)",p:21.5,f:0,c:150},{n:"Arctic char (baked)",p:21.3,f:0,c:168},
-  {n:"Atlantic mackerel (baked)",p:23.7,f:0,c:262},{n:"Mackerel (canned in oil)",p:25.1,f:0,c:305},
-  {n:"Atlantic herring (baked)",p:23.0,f:0,c:203},{n:"Pickled herring",p:12.0,f:0,c:262},
-  {n:"Sardines (canned in oil, drained)",p:24.6,f:0,c:208},{n:"Sardines in tomato sauce",p:19.0,f:0,c:162},
-  {n:"Anchovies (canned in oil)",p:28.9,f:0,c:210},{n:"Swordfish (baked)",p:23.5,f:0,c:172},
-  {n:"Striped bass (baked)",p:21.9,f:0,c:124},{n:"Perch (baked)",p:21.4,f:0,c:117},
-  {n:"Flounder (baked)",p:23.0,f:0,c:108},{n:"Sole (baked)",p:23.0,f:0,c:108},
-  {n:"Catfish (baked)",p:18.5,f:0,c:144},{n:"Snapper (baked)",p:22.4,f:0,c:128},
-  {n:"Grouper (baked)",p:24.8,f:0,c:118},{n:"Sea bass (baked)",p:23.6,f:0,c:124},
-  {n:"Walleye (baked)",p:23.9,f:0,c:119},{n:"Carp (baked)",p:21.7,f:0,c:162},
-  {n:"Eel (baked)",p:21.5,f:0,c:236},{n:"Shrimp (steamed)",p:24.3,f:0,c:119},
-  {n:"Tiger prawns (grilled)",p:26.0,f:0,c:130},{n:"Lobster (steamed)",p:20.5,f:0,c:98},
-  {n:"Crab, blue (steamed)",p:19.4,f:0,c:102},{n:"King crab legs (steamed)",p:19.4,f:0,c:96},
-  {n:"Dungeness crab (steamed)",p:21.8,f:0,c:110},{n:"Imitation crab (surimi)",p:8.0,f:0,c:95},
-  {n:"Scallops (steamed)",p:17.0,f:0,c:88},{n:"Sea scallops (pan-seared)",p:20.5,f:0,c:111},
-  {n:"Mussels (steamed)",p:18.0,f:0,c:172},{n:"Clams (steamed)",p:25.6,f:0,c:148},
-  {n:"Oysters (raw)",p:7.1,f:0,c:68},{n:"Oysters (baked)",p:9.5,f:0,c:137},
-  {n:"Squid/calamari (raw)",p:15.6,f:0,c:92},{n:"Squid (fried)",p:15.8,f:0,c:175},
-  {n:"Octopus (cooked)",p:18.2,f:0,c:164},{n:"Fish sticks (baked)",p:13.5,f:0.5,c:200},
-  {n:"Smoked salmon (lox)",p:18.3,f:0,c:117},{n:"Smoked mackerel",p:18.9,f:0,c:305},
-  {n:"Smoked trout",p:21.6,f:0,c:168},{n:"Smoked herring (kipper)",p:22.2,f:0,c:217},
-  {n:"Salmon roe (ikura)",p:29.0,f:0,c:250},{n:"Crab meat (canned)",p:17.4,f:0,c:90},
-  {n:"Shrimp (canned)",p:22.0,f:0,c:104},{n:"Sablefish/black cod (baked)",p:17.2,f:0,c:250},
-  {n:"Rockfish (baked)",p:20.0,f:0,c:109},{n:"Pacific halibut (baked)",p:23.2,f:0,c:140},
-  {n:"Yellowfin tuna (raw)",p:24.4,f:0,c:108},{n:"Bluefin tuna (raw)",p:23.3,f:0,c:144},
-  {n:"Sprats (canned)",p:18.8,f:0,c:296},{n:"Pilchards (canned)",p:22.0,f:0,c:185},
-  {n:"Whitefish (baked)",p:21.0,f:0,c:134},{n:"Monkfish (baked)",p:18.5,f:0,c:97},
-  {n:"Bluefish (baked)",p:20.0,f:0,c:159},{n:"Yellowtail (baked)",p:23.4,f:0,c:146},
-  {n:"Barramundi (baked)",p:21.0,f:0,c:117},{n:"Bream (baked)",p:21.0,f:0,c:128},
-  {n:"Turbot (baked)",p:21.5,f:0,c:122},{n:"Lake trout (baked)",p:21.9,f:0,c:168},
-  {n:"Brown trout (baked)",p:20.8,f:0,c:151},{n:"Salmon, Atlantic (raw)",p:20.4,f:0,c:208},
-  {n:"Tuna, skipjack (baked)",p:26.0,f:0,c:132},{n:"Lingcod (baked)",p:22.6,f:0,c:109}
+  {n:"Atlantic salmon, baked",srv:"1 fillet (178g)",p:45,f:0,c:367},
+  {n:"Sockeye salmon, baked",srv:"100g",p:26,f:0,c:169},
+  {n:"Pink salmon, canned in water",srv:"half can (85g)",p:17,f:0,c:100},
+  {n:"Canned tuna in water",srv:"1 can (142g)",p:36,f:0,c:165},
+  {n:"Canned tuna in oil drained",srv:"1 can (142g)",p:33,f:0,c:281},
+  {n:"Albacore tuna, canned",srv:"1 can (142g)",p:38,f:0,c:206},
+  {n:"Fresh tuna steak, grilled",srv:"100g",p:30,f:0,c:184},
+  {n:"Atlantic cod, baked",srv:"1 fillet (180g)",p:41,f:0,c:189},
+  {n:"Haddock, baked",srv:"1 fillet (150g)",p:36,f:0,c:168},
+  {n:"Tilapia, baked",srv:"1 fillet (170g)",p:45,f:0,c:218},
+  {n:"Pollock, baked",srv:"100g",p:24,f:0,c:111},
+  {n:"Mahi-mahi, baked",srv:"100g",p:24,f:0,c:109},
+  {n:"Halibut, baked",srv:"1 fillet (159g)",p:37,f:0,c:222},
+  {n:"Rainbow trout, baked",srv:"1 fillet (143g)",p:31,f:0,c:215},
+  {n:"Atlantic mackerel, baked",srv:"1 fillet (88g)",p:21,f:0,c:231},
+  {n:"Mackerel, canned in oil",srv:"1 can (125g)",p:31,f:0,c:381},
+  {n:"Atlantic herring, baked",srv:"100g",p:23,f:0,c:203},
+  {n:"Sardines, canned in oil drained",srv:"1 can (92g)",p:23,f:0,c:191},
+  {n:"Anchovies, canned in oil",srv:"5 anchovies (20g)",p:6,f:0,c:42},
+  {n:"Swordfish, baked",srv:"100g",p:24,f:0,c:172},
+  {n:"Snapper, baked",srv:"1 fillet (170g)",p:38,f:0,c:218},
+  {n:"Grouper, baked",srv:"1 fillet (202g)",p:50,f:0,c:238},
+  {n:"Sea bass, baked",srv:"100g",p:24,f:0,c:124},
+  {n:"Catfish, baked",srv:"1 fillet (140g)",p:26,f:0,c:202},
+  {n:"Shrimp, steamed",srv:"100g",p:24,f:0,c:119},
+  {n:"Tiger prawns, grilled",srv:"100g",p:26,f:0,c:130},
+  {n:"Lobster, steamed",srv:"1 cup (145g)",p:30,f:0,c:142},
+  {n:"Crab, blue steamed",srv:"100g",p:19,f:0,c:102},
+  {n:"King crab legs, steamed",srv:"1 leg (134g)",p:26,f:0,c:129},
+  {n:"Dungeness crab, steamed",srv:"100g",p:22,f:0,c:110},
+  {n:"Imitation crab, surimi",srv:"100g",p:8,f:0,c:95},
+  {n:"Scallops, steamed",srv:"6 large (100g)",p:17,f:0,c:88},
+  {n:"Mussels, steamed",srv:"1 cup (150g)",p:27,f:0,c:258},
+  {n:"Clams, steamed",srv:"20 small (90g)",p:23,f:0,c:133},
+  {n:"Oysters, raw",srv:"6 medium (84g)",p:6,f:0,c:57},
+  {n:"Squid / calamari, raw",srv:"100g",p:16,f:0,c:92},
+  {n:"Octopus, cooked",srv:"100g",p:18,f:0,c:164},
+  {n:"Fish sticks, baked",srv:"3 sticks (90g)",p:12,f:0.5,c:180},
+  {n:"Smoked salmon, lox",srv:"3 oz (85g)",p:16,f:0,c:100},
+  {n:"Smoked mackerel",srv:"100g",p:19,f:0,c:305},
+  {n:"Smoked trout",srv:"100g",p:22,f:0,c:168},
+  {n:"Crab meat, canned",srv:"half cup (110g)",p:19,f:0,c:99},
+  {n:"Shrimp, canned",srv:"1 can (113g)",p:25,f:0,c:117},
+  {n:"Tuna skipjack, baked",srv:"100g",p:26,f:0,c:132}
 ],
 Dairy:[
-  {n:"Greek yogurt, 0% fat (plain)",p:10.2,f:0,c:59},{n:"Greek yogurt, 2% fat (plain)",p:9.9,f:0,c:73},
-  {n:"Greek yogurt, full fat (plain)",p:9.0,f:0,c:97},{n:"Skyr (plain, 0% fat)",p:11.0,f:0,c:63},
-  {n:"Icelandic skyr (vanilla)",p:9.5,f:0,c:93},{n:"Plain yogurt, low fat",p:5.7,f:0,c:63},
-  {n:"Kefir, low fat",p:3.8,f:0,c:52},{n:"Kefir, whole milk",p:3.4,f:0,c:61},
-  {n:"Cottage cheese, 1% fat",p:11.7,f:0,c:72},{n:"Cottage cheese, 2% fat",p:11.1,f:0,c:86},
-  {n:"Cottage cheese, 4% fat",p:11.1,f:0,c:110},{n:"Quark (0% fat)",p:12.0,f:0,c:67},
-  {n:"Ricotta (part skim)",p:7.3,f:0,c:138},{n:"Ricotta (whole milk)",p:6.9,f:0,c:174},
-  {n:"Whole egg (large)",p:12.6,f:0,c:155},{n:"Egg whites (raw)",p:10.9,f:0,c:52},
-  {n:"Egg yolk (raw)",p:15.9,f:0,c:322},{n:"Hard-boiled egg",p:12.6,f:0,c:155},
-  {n:"Scrambled eggs (plain)",p:9.9,f:0,c:149},{n:"Cheddar cheese (aged)",p:24.9,f:0,c:403},
-  {n:"Mozzarella (part skim)",p:21.6,f:0,c:254},{n:"Mozzarella (whole milk)",p:22.2,f:0,c:300},
-  {n:"Swiss cheese",p:26.9,f:0,c:380},{n:"Parmesan (grated)",p:38.5,f:0,c:431},
-  {n:"Pecorino Romano",p:32.0,f:0,c:387},{n:"Gruyere",p:29.8,f:0,c:413},
-  {n:"Gouda",p:24.9,f:0,c:356},{n:"Edam",p:25.0,f:0,c:357},
-  {n:"Emmenthal",p:28.8,f:0,c:380},{n:"Provolone",p:25.6,f:0,c:352},
-  {n:"Colby",p:23.8,f:0,c:394},{n:"Monterey Jack",p:24.5,f:0,c:373},
-  {n:"Muenster",p:23.4,f:0,c:368},{n:"Havarti",p:21.9,f:0,c:371},
-  {n:"Brie",p:20.8,f:0,c:334},{n:"Camembert",p:19.8,f:0,c:300},
-  {n:"Feta cheese",p:14.2,f:0,c:264},{n:"Goat cheese (soft)",p:21.6,f:0,c:364},
-  {n:"Blue cheese (Gorgonzola)",p:21.4,f:0,c:353},{n:"Cream cheese (full fat)",p:5.9,f:0,c:342},
-  {n:"Cream cheese (light)",p:8.1,f:0,c:231},{n:"String cheese (mozzarella)",p:21.0,f:0,c:271},
-  {n:"Milk, whole (3.25%)",p:3.2,f:0,c:61},{n:"Milk, 2%",p:3.4,f:0,c:50},
-  {n:"Milk, 1%",p:3.4,f:0,c:42},{n:"Skim milk",p:3.4,f:0,c:34},
-  {n:"Buttermilk",p:3.3,f:0,c:40},{n:"Evaporated milk (whole)",p:6.8,f:0,c:135},
-  {n:"Condensed milk (sweetened)",p:8.1,f:0,c:321},{n:"Dry skim milk powder",p:36.2,f:0,c:362},
-  {n:"Whey protein powder (unflavoured)",p:80.0,f:0,c:352},{n:"Casein protein powder",p:78.0,f:0,c:359},
-  {n:"Pea protein powder",p:80.0,f:1.0,c:376},{n:"Milk protein isolate",p:82.0,f:0,c:370},
-  {n:"Sour cream (full fat)",p:2.1,f:0,c:193},{n:"Sour cream (light)",p:3.3,f:0,c:136},
-  {n:"Butter (unsalted)",p:0.9,f:0,c:717},{n:"Ghee (clarified butter)",p:0.3,f:0,c:900},
-  {n:"Labneh (strained yogurt)",p:8.0,f:0,c:140},{n:"Paneer",p:18.3,f:0,c:321},
-  {n:"Halloumi (grilled)",p:21.0,f:0,c:316},{n:"Queso fresco",p:16.8,f:0,c:286},
-  {n:"Mascarpone",p:4.5,f:0,c:429},{n:"Laughing Cow (light wedge)",p:8.0,f:0,c:148},
-  {n:"Babybel (original)",p:20.0,f:0,c:306},{n:"Processed cheese (single)",p:16.0,f:0,c:328},
-  {n:"Cottage cheese (creamed)",p:11.1,f:0,c:110},{n:"Protein milk (Fairlife 2%)",p:12.2,f:0,c:60},
-  {n:"Egg white liquid (carton)",p:10.9,f:0,c:52},{n:"Colby-Jack cheese",p:23.8,f:0,c:394},
-  {n:"Pepper Jack cheese",p:23.1,f:0,c:373},{n:"Lactose-free milk (2%)",p:3.4,f:0,c:50},
-  {n:"Ultra-filtered milk (whole)",p:5.5,f:0,c:70},{n:"Sheep milk yogurt",p:5.5,f:0,c:105},
-  {n:"Kefir cheese",p:12.0,f:0,c:180},{n:"Egg, duck (whole)",p:12.8,f:0,c:185},
-  {n:"Egg, quail (whole)",p:13.0,f:0,c:158},{n:"Milk, oat (commercial)",p:1.0,f:1.0,c:45},
-  {n:"Milk, soy (unsweetened)",p:3.3,f:0.4,c:33},{n:"Milk, almond (unsweetened)",p:0.4,f:0.5,c:15},
-  {n:"Milk, pea (Ripple)",p:4.3,f:0,c:70}
+  {n:"Greek yogurt 0% fat plain",srv:"3/4 cup (170g)",p:17,f:0,c:100},
+  {n:"Greek yogurt 2% fat plain",srv:"3/4 cup (170g)",p:17,f:0,c:124},
+  {n:"Greek yogurt full fat plain",srv:"3/4 cup (170g)",p:15,f:0,c:165},
+  {n:"Skyr plain 0% fat",srv:"3/4 cup (170g)",p:19,f:0,c:107},
+  {n:"Plain yogurt low fat",srv:"1 cup (245g)",p:14,f:0,c:154},
+  {n:"Kefir low fat",srv:"1 cup (245ml)",p:9,f:0,c:127},
+  {n:"Kefir whole milk",srv:"1 cup (245ml)",p:8,f:0,c:150},
+  {n:"Cottage cheese 1% fat",srv:"half cup (113g)",p:13,f:0,c:81},
+  {n:"Cottage cheese 2% fat",srv:"half cup (113g)",p:13,f:0,c:97},
+  {n:"Cottage cheese 4% fat",srv:"half cup (113g)",p:13,f:0,c:124},
+  {n:"Quark 0% fat",srv:"half cup (125g)",p:15,f:0,c:84},
+  {n:"Ricotta part skim",srv:"half cup (124g)",p:9,f:0,c:171},
+  {n:"Ricotta whole milk",srv:"half cup (124g)",p:9,f:0,c:216},
+  {n:"Egg whole large",srv:"1 egg (50g)",p:6,f:0,c:78},
+  {n:"Egg whites raw",srv:"3 whites (99g)",p:11,f:0,c:52},
+  {n:"Egg yolk raw",srv:"1 yolk (17g)",p:3,f:0,c:55},
+  {n:"Hard-boiled egg",srv:"1 egg (50g)",p:6,f:0,c:78},
+  {n:"Scrambled eggs plain",srv:"2 eggs (122g)",p:12,f:0,c:182},
+  {n:"Cheddar cheese aged",srv:"1 oz (28g)",p:7,f:0,c:113},
+  {n:"Mozzarella part skim",srv:"1 oz (28g)",p:6,f:0,c:71},
+  {n:"Mozzarella whole milk",srv:"1 oz (28g)",p:6,f:0,c:84},
+  {n:"Swiss cheese",srv:"1 slice (28g)",p:8,f:0,c:106},
+  {n:"Parmesan grated",srv:"2 tbsp (10g)",p:4,f:0,c:43},
+  {n:"Pecorino Romano",srv:"1 oz (28g)",p:9,f:0,c:108},
+  {n:"Gruyere",srv:"1 oz (28g)",p:8,f:0,c:116},
+  {n:"Gouda",srv:"1 oz (28g)",p:7,f:0,c:100},
+  {n:"Edam",srv:"1 oz (28g)",p:7,f:0,c:100},
+  {n:"Feta cheese",srv:"1 oz (28g)",p:4,f:0,c:74},
+  {n:"Goat cheese soft",srv:"1 oz (28g)",p:6,f:0,c:102},
+  {n:"Blue cheese",srv:"1 oz (28g)",p:6,f:0,c:99},
+  {n:"Cream cheese full fat",srv:"2 tbsp (29g)",p:2,f:0,c:99},
+  {n:"Cream cheese light",srv:"2 tbsp (29g)",p:2,f:0,c:67},
+  {n:"String cheese mozzarella",srv:"1 stick (28g)",p:6,f:0,c:76},
+  {n:"Milk whole 3.25%",srv:"1 cup (244ml)",p:8,f:0,c:149},
+  {n:"Milk 2%",srv:"1 cup (244ml)",p:8,f:0,c:122},
+  {n:"Milk 1%",srv:"1 cup (244ml)",p:8,f:0,c:102},
+  {n:"Skim milk",srv:"1 cup (244ml)",p:8,f:0,c:83},
+  {n:"Buttermilk",srv:"1 cup (245ml)",p:8,f:0,c:98},
+  {n:"Evaporated milk whole",srv:"half cup (126ml)",p:9,f:0,c:170},
+  {n:"Dry skim milk powder",srv:"quarter cup (30g)",p:11,f:0,c:109},
+  {n:"Whey protein powder",srv:"1 scoop (30g)",p:24,f:0,c:106},
+  {n:"Casein protein powder",srv:"1 scoop (30g)",p:23,f:0,c:108},
+  {n:"Pea protein powder",srv:"1 scoop (30g)",p:24,f:0.3,c:113},
+  {n:"Sour cream full fat",srv:"2 tbsp (30g)",p:1,f:0,c:58},
+  {n:"Sour cream light",srv:"2 tbsp (30g)",p:1,f:0,c:41},
+  {n:"Butter unsalted",srv:"1 tbsp (14g)",p:0,f:0,c:100},
+  {n:"Ghee clarified butter",srv:"1 tbsp (13g)",p:0,f:0,c:117},
+  {n:"Paneer",srv:"half cup (100g)",p:18,f:0,c:321},
+  {n:"Halloumi grilled",srv:"2 slices (60g)",p:13,f:0,c:190},
+  {n:"Mascarpone",srv:"2 tbsp (30g)",p:1,f:0,c:129},
+  {n:"Protein milk Fairlife 2%",srv:"1 cup (240ml)",p:13,f:0,c:80},
+  {n:"Babybel original",srv:"1 wheel (22g)",p:4,f:0,c:67},
+  {n:"Oat milk commercial",srv:"1 cup (240ml)",p:2,f:2.4,c:108},
+  {n:"Soy milk unsweetened",srv:"1 cup (240ml)",p:8,f:1,c:79},
+  {n:"Almond milk unsweetened",srv:"1 cup (240ml)",p:1,f:1.2,c:36},
+  {n:"Pea milk Ripple",srv:"1 cup (240ml)",p:10,f:0,c:168},
+  {n:"Egg duck whole",srv:"1 egg (70g)",p:9,f:0,c:130},
+  {n:"Egg quail whole",srv:"5 eggs (50g)",p:7,f:0,c:79},
+  {n:"Labneh strained yogurt",srv:"2 tbsp (30g)",p:2,f:0,c:42}
 ],
 Legumes:[
-  {n:"Black beans (cooked)",p:8.9,f:8.7,c:132},{n:"Chickpeas / garbanzo (cooked)",p:8.9,f:7.6,c:164},
-  {n:"Green lentils (cooked)",p:9.0,f:7.9,c:116},{n:"Red lentils (cooked)",p:7.6,f:5.5,c:116},
-  {n:"French lentils (Puy, cooked)",p:9.0,f:7.5,c:116},{n:"Kidney beans, red (cooked)",p:8.7,f:7.4,c:127},
-  {n:"Kidney beans, white (cooked)",p:9.0,f:6.3,c:127},{n:"Pinto beans (cooked)",p:9.0,f:9.0,c:143},
-  {n:"Navy beans (cooked)",p:8.2,f:10.5,c:140},{n:"Great Northern beans (cooked)",p:8.3,f:7.0,c:118},
-  {n:"Adzuki beans (cooked)",p:7.5,f:7.3,c:128},{n:"Black-eyed peas (cooked)",p:7.7,f:6.5,c:116},
-  {n:"Mung beans (cooked)",p:7.0,f:7.6,c:105},{n:"Edamame, shelled (cooked)",p:11.9,f:5.2,c:121},
-  {n:"Soybeans, mature (cooked)",p:17.0,f:6.0,c:173},{n:"Split peas, green (cooked)",p:8.3,f:8.3,c:118},
-  {n:"Split peas, yellow (cooked)",p:8.3,f:8.3,c:118},{n:"Lima beans (cooked)",p:6.8,f:5.3,c:115},
-  {n:"Fava / broad beans (cooked)",p:7.6,f:5.4,c:110},{n:"Cannellini beans (cooked)",p:9.0,f:6.3,c:127},
-  {n:"Butter beans (cooked)",p:6.8,f:5.3,c:115},{n:"Borlotti beans (cooked)",p:9.0,f:6.5,c:130},
-  {n:"Lupini beans (cooked)",p:15.6,f:2.8,c:119},{n:"Cranberry beans (cooked)",p:9.3,f:8.9,c:136},
-  {n:"Pigeon peas (cooked)",p:7.2,f:5.6,c:121},{n:"Cowpeas / black-eyed (cooked)",p:7.7,f:6.5,c:116},
-  {n:"Small red beans (cooked)",p:9.0,f:7.0,c:127},{n:"Firm tofu",p:17.3,f:0.3,c:144},
-  {n:"Silken tofu",p:5.3,f:0.1,c:55},{n:"Extra-firm tofu",p:17.3,f:0.3,c:144},
-  {n:"Smoked tofu",p:14.0,f:0.5,c:140},{n:"Tempeh (plain)",p:19.0,f:1.8,c:193},
-  {n:"Natto",p:17.7,f:5.4,c:211},{n:"Miso paste (white)",p:12.0,f:3.8,c:199},
-  {n:"Edamame in pods (cooked)",p:8.2,f:3.7,c:100},{n:"Soy protein isolate (powder)",p:88.0,f:0.5,c:338},
-  {n:"TVP / soy mince (dry)",p:51.5,f:4.2,c:333},{n:"Hummus (classic)",p:7.9,f:6.0,c:177},
-  {n:"Chickpea pasta (dry)",p:20.6,f:8.1,c:365},{n:"Lentil pasta (dry)",p:24.0,f:5.0,c:360},
-  {n:"Black bean pasta (dry)",p:20.0,f:12.0,c:350},{n:"Chickpea flour / besan",p:22.4,f:10.8,c:387},
-  {n:"Lentil flour",p:26.0,f:11.0,c:358},{n:"Refried beans (canned)",p:5.6,f:5.5,c:115},
-  {n:"Baked beans (canned)",p:5.1,f:5.0,c:94},{n:"Falafel (baked)",p:13.3,f:5.4,c:333},
-  {n:"Falafel (fried)",p:13.3,f:4.5,c:333},{n:"Mung bean sprouts (raw)",p:3.0,f:1.8,c:30},
-  {n:"Soybean sprouts (raw)",p:4.2,f:2.0,c:67},{n:"Lentil sprouts (raw)",p:9.0,f:3.8,c:106},
-  {n:"Chickpea (canned, drained)",p:7.4,f:6.4,c:164},{n:"Kidney beans (canned)",p:7.1,f:6.7,c:127},
-  {n:"Black beans (canned)",p:7.1,f:7.6,c:132},{n:"Lentils (canned)",p:9.0,f:5.5,c:116},
-  {n:"White beans (canned)",p:7.0,f:7.0,c:127},{n:"Pinto beans (canned)",p:7.0,f:7.5,c:143},
-  {n:"Edamame, frozen (cooked)",p:11.9,f:5.2,c:121},{n:"Green peas, frozen (cooked)",p:5.4,f:5.7,c:62},
-  {n:"Pea protein powder",p:80.0,f:1.0,c:376},{n:"Roasted chickpeas (snack)",p:14.5,f:5.0,c:364},
-  {n:"Roasted fava beans (snack)",p:24.0,f:10.0,c:371},{n:"Roasted edamame (snack)",p:40.0,f:10.0,c:407},
-  {n:"Lupin flour",p:40.7,f:36.5,c:370},{n:"Black soybean (cooked)",p:17.0,f:8.0,c:185}
+  {n:"Black beans cooked",srv:"1 cup (172g)",p:15,f:15,c:227},
+  {n:"Chickpeas / garbanzo cooked",srv:"1 cup (164g)",p:15,f:12,c:269},
+  {n:"Green lentils cooked",srv:"1 cup (198g)",p:18,f:16,c:230},
+  {n:"Red lentils cooked",srv:"1 cup (198g)",p:15,f:11,c:230},
+  {n:"Kidney beans red cooked",srv:"1 cup (177g)",p:15,f:13,c:225},
+  {n:"Pinto beans cooked",srv:"1 cup (171g)",p:15,f:15,c:245},
+  {n:"Navy beans cooked",srv:"1 cup (182g)",p:15,f:19,c:255},
+  {n:"Great Northern beans cooked",srv:"1 cup (177g)",p:15,f:12,c:209},
+  {n:"Adzuki beans cooked",srv:"1 cup (230g)",p:17,f:17,c:294},
+  {n:"Black-eyed peas cooked",srv:"1 cup (171g)",p:13,f:11,c:198},
+  {n:"Mung beans cooked",srv:"1 cup (202g)",p:14,f:15,c:212},
+  {n:"Edamame shelled cooked",srv:"1 cup (155g)",p:18,f:8,c:188},
+  {n:"Soybeans mature cooked",srv:"1 cup (172g)",p:29,f:10,c:298},
+  {n:"Split peas cooked",srv:"1 cup (196g)",p:16,f:16,c:231},
+  {n:"Lima beans cooked",srv:"1 cup (188g)",p:13,f:10,c:216},
+  {n:"Fava / broad beans cooked",srv:"1 cup (170g)",p:13,f:9,c:187},
+  {n:"Cannellini beans cooked",srv:"1 cup (179g)",p:16,f:11,c:227},
+  {n:"Lupini beans cooked",srv:"1 cup (166g)",p:26,f:5,c:198},
+  {n:"Edamame in pods cooked",srv:"1 cup (155g)",p:13,f:6,c:155},
+  {n:"Firm tofu",srv:"half cup (126g)",p:22,f:0.4,c:181},
+  {n:"Silken tofu",srv:"half cup (124g)",p:7,f:0.1,c:68},
+  {n:"Extra-firm tofu",srv:"half cup (126g)",p:22,f:0.4,c:181},
+  {n:"Smoked tofu",srv:"100g",p:14,f:0.5,c:140},
+  {n:"Tempeh plain",srv:"half cup (83g)",p:16,f:1.5,c:160},
+  {n:"Natto",srv:"half cup (87g)",p:15,f:4.7,c:184},
+  {n:"Miso paste white",srv:"1 tbsp (17g)",p:2,f:0.6,c:34},
+  {n:"Miso paste red",srv:"1 tbsp (17g)",p:2,f:0.7,c:34},
+  {n:"Soy protein isolate powder",srv:"1 scoop (28g)",p:25,f:0.1,c:95},
+  {n:"TVP / soy mince dry",srv:"quarter cup (25g)",p:13,f:1,c:83},
+  {n:"Hummus classic",srv:"2 tbsp (30g)",p:2,f:1.8,c:53},
+  {n:"Chickpea pasta dry",srv:"2 oz (56g)",p:12,f:4.5,c:204},
+  {n:"Lentil pasta dry",srv:"2 oz (56g)",p:13,f:3,c:202},
+  {n:"Black bean pasta dry",srv:"2 oz (56g)",p:11,f:7,c:196},
+  {n:"Chickpea flour / besan",srv:"quarter cup (30g)",p:7,f:3.2,c:116},
+  {n:"Refried beans canned",srv:"half cup (126g)",p:7,f:7,c:145},
+  {n:"Baked beans canned",srv:"half cup (127g)",p:6,f:6,c:119},
+  {n:"Falafel baked",srv:"3 patties (75g)",p:10,f:4,c:250},
+  {n:"Mung bean sprouts raw",srv:"1 cup (104g)",p:3,f:2,c:31},
+  {n:"Chickpeas canned drained",srv:"half cup (120g)",p:9,f:7.7,c:197},
+  {n:"Kidney beans canned",srv:"half cup (128g)",p:9,f:8.6,c:163},
+  {n:"Black beans canned",srv:"half cup (130g)",p:9,f:9.9,c:172},
+  {n:"Lentils canned",srv:"half cup (100g)",p:9,f:5.5,c:116},
+  {n:"Pea protein powder",srv:"1 scoop (30g)",p:24,f:0.3,c:113},
+  {n:"Roasted chickpeas snack",srv:"1 oz (28g)",p:4,f:1.4,c:102},
+  {n:"Roasted edamame snack",srv:"1 oz (28g)",p:11,f:2.8,c:114}
 ],
 Grains:[
-  {n:"Oats, rolled / old fashioned (dry)",p:16.9,f:10.6,c:379},{n:"Steel-cut oats (dry)",p:17.0,f:10.0,c:379},
-  {n:"Oat bran (dry)",p:17.3,f:15.4,c:246},{n:"Instant oats (plain, dry)",p:13.0,f:8.3,c:371},
-  {n:"Quinoa (cooked)",p:4.4,f:2.8,c:120},{n:"Quinoa (dry)",p:14.1,f:7.0,c:368},
-  {n:"Brown rice (cooked)",p:2.6,f:1.8,c:122},{n:"Brown rice (dry)",p:7.9,f:3.5,c:370},
-  {n:"White rice (cooked)",p:2.7,f:0.4,c:130},{n:"Wild rice (cooked)",p:4.0,f:1.8,c:101},
-  {n:"Basmati rice (cooked)",p:3.5,f:0.5,c:130},{n:"Whole wheat bread",p:9.0,f:6.8,c:247},
-  {n:"White bread",p:8.0,f:2.4,c:265},{n:"Rye bread (whole grain)",p:8.5,f:5.8,c:259},
-  {n:"Pumpernickel bread",p:7.5,f:6.0,c:241},{n:"Sourdough (whole wheat)",p:8.9,f:5.8,c:254},
-  {n:"Sourdough (white)",p:8.5,f:2.5,c:268},{n:"Ezekiel 4:9 bread",p:8.0,f:8.0,c:235},
-  {n:"Multigrain bread",p:8.0,f:5.2,c:250},{n:"Pita bread (whole wheat)",p:9.0,f:4.7,c:266},
-  {n:"Pita bread (white)",p:9.1,f:1.8,c:275},{n:"Tortilla, whole wheat (medium)",p:7.5,f:4.5,c:286},
-  {n:"Tortilla, flour (white)",p:8.0,f:2.0,c:312},{n:"Tortilla, corn",p:5.7,f:4.4,c:218},
-  {n:"Naan bread (plain)",p:8.7,f:2.3,c:317},{n:"Barley, pearled (cooked)",p:2.3,f:3.8,c:123},
-  {n:"Buckwheat groats (cooked)",p:3.4,f:2.7,c:92},{n:"Buckwheat flour",p:13.3,f:10.0,c:335},
-  {n:"Soba noodles (cooked)",p:5.1,f:1.2,c:99},{n:"Millet (cooked)",p:3.5,f:1.3,c:119},
-  {n:"Amaranth (cooked)",p:3.8,f:2.1,c:102},{n:"Bulgur wheat (cooked)",p:3.1,f:4.5,c:83},
-  {n:"Farro (cooked)",p:7.0,f:7.0,c:170},{n:"Spelt (cooked)",p:5.5,f:3.9,c:127},
-  {n:"Freekeh (cooked)",p:5.7,f:5.0,c:140},{n:"Teff (cooked)",p:3.9,f:2.8,c:101},
-  {n:"Sorghum (cooked)",p:2.9,f:3.3,c:329},{n:"Corn / maize (cooked, sweet)",p:3.3,f:2.4,c:96},
-  {n:"Polenta / cornmeal (cooked)",p:1.8,f:1.2,c:70},{n:"Couscous (cooked)",p:3.8,f:1.4,c:112},
-  {n:"Wheat bran (raw)",p:15.5,f:42.8,c:216},{n:"Wheat germ (toasted)",p:29.1,f:13.2,c:382},
-  {n:"All-bran cereal",p:10.6,f:29.3,c:212},{n:"Bran flakes cereal",p:10.0,f:12.5,c:318},
-  {n:"Shredded wheat (no sugar)",p:10.6,f:11.2,c:338},{n:"Grape-Nuts cereal",p:12.5,f:6.9,c:375},
-  {n:"Cheerios (plain)",p:13.0,f:10.0,c:376},{n:"Special K (original)",p:18.2,f:3.3,c:378},
-  {n:"Corn flakes",p:7.5,f:2.9,c:378},{n:"Muesli (no sugar added)",p:11.0,f:8.0,c:363},
-  {n:"Granola (homemade)",p:11.2,f:6.5,c:489},{n:"Porridge / oatmeal (cooked)",p:2.5,f:1.7,c:71},
-  {n:"Whole wheat pasta (dry)",p:13.0,f:7.2,c:348},{n:"Whole wheat pasta (cooked)",p:5.3,f:3.6,c:124},
-  {n:"White pasta (dry)",p:13.0,f:2.9,c:371},{n:"White pasta (cooked)",p:5.8,f:1.8,c:158},
-  {n:"Rice noodles (cooked)",p:1.8,f:0.9,c:109},{n:"Udon noodles (cooked)",p:3.5,f:0.8,c:105},
-  {n:"Egg noodles (cooked)",p:4.4,f:1.1,c:138},{n:"Protein pasta, chickpea (cooked)",p:10.9,f:4.1,c:173},
-  {n:"Rice cake (plain)",p:7.5,f:1.0,c:387},{n:"Crispbread, rye (Wasa)",p:9.7,f:16.8,c:342},
-  {n:"Crackers, whole wheat (Triscuit)",p:11.0,f:8.0,c:433},{n:"Bagel, whole wheat",p:9.0,f:4.0,c:245},
-  {n:"English muffin, whole wheat",p:9.0,f:5.0,c:223},{n:"Popcorn (air-popped)",p:3.7,f:14.5,c:387}
+  {n:"Oats rolled old fashioned dry",srv:"half cup (40g)",p:5,f:4,c:150},
+  {n:"Steel-cut oats dry",srv:"quarter cup (40g)",p:7,f:4,c:150},
+  {n:"Oat bran dry",srv:"quarter cup (24g)",p:4,f:3.7,c:59},
+  {n:"Instant oats plain dry",srv:"1 packet (28g)",p:4,f:2.3,c:104},
+  {n:"Porridge / oatmeal cooked",srv:"1 cup (234g)",p:6,f:4,c:166},
+  {n:"Quinoa cooked",srv:"1 cup (185g)",p:8,f:5.2,c:222},
+  {n:"Brown rice cooked",srv:"1 cup (202g)",p:5,f:3.6,c:246},
+  {n:"White rice cooked",srv:"1 cup (186g)",p:4,f:0.6,c:206},
+  {n:"Wild rice cooked",srv:"1 cup (164g)",p:7,f:3,c:166},
+  {n:"Basmati rice cooked",srv:"1 cup (163g)",p:4,f:0.6,c:200},
+  {n:"Whole wheat bread",srv:"1 slice (43g)",p:4,f:2.9,c:106},
+  {n:"White bread",srv:"1 slice (25g)",p:2,f:0.6,c:66},
+  {n:"Rye bread whole grain",srv:"1 slice (32g)",p:3,f:1.9,c:83},
+  {n:"Pumpernickel bread",srv:"1 slice (32g)",p:2,f:1.9,c:77},
+  {n:"Sourdough white",srv:"1 slice (50g)",p:4,f:1.3,c:134},
+  {n:"Ezekiel 4:9 bread",srv:"1 slice (34g)",p:3,f:2.7,c:80},
+  {n:"Multigrain bread",srv:"1 slice (38g)",p:3,f:2,c:95},
+  {n:"Pita bread whole wheat",srv:"1 pita (64g)",p:6,f:3,c:170},
+  {n:"Pita bread white",srv:"1 pita (60g)",p:5,f:1.1,c:165},
+  {n:"Tortilla whole wheat medium",srv:"1 tortilla (45g)",p:3,f:2,c:129},
+  {n:"Tortilla flour white",srv:"1 tortilla (45g)",p:4,f:0.9,c:140},
+  {n:"Tortilla corn",srv:"2 tortillas (46g)",p:3,f:2,c:100},
+  {n:"Naan bread plain",srv:"1 naan (90g)",p:8,f:2.1,c:285},
+  {n:"Barley pearled cooked",srv:"1 cup (157g)",p:4,f:6,c:193},
+  {n:"Buckwheat groats cooked",srv:"1 cup (168g)",p:6,f:4.5,c:155},
+  {n:"Soba noodles cooked",srv:"1 cup (113g)",p:6,f:1.4,c:112},
+  {n:"Millet cooked",srv:"1 cup (174g)",p:6,f:2.3,c:207},
+  {n:"Amaranth cooked",srv:"1 cup (246g)",p:9,f:5.2,c:251},
+  {n:"Bulgur wheat cooked",srv:"1 cup (182g)",p:6,f:8.2,c:151},
+  {n:"Farro cooked",srv:"1 cup (200g)",p:14,f:14,c:340},
+  {n:"Spelt cooked",srv:"1 cup (194g)",p:11,f:7.6,c:246},
+  {n:"Freekeh cooked",srv:"1 cup (170g)",p:10,f:8.5,c:238},
+  {n:"Couscous cooked",srv:"1 cup (157g)",p:6,f:2.2,c:176},
+  {n:"Wheat bran raw",srv:"2 tbsp (14g)",p:2,f:6,c:30},
+  {n:"Wheat germ toasted",srv:"2 tbsp (14g)",p:4,f:1.9,c:54},
+  {n:"All-bran cereal",srv:"half cup (30g)",p:3,f:8.8,c:64},
+  {n:"Bran flakes cereal",srv:"3/4 cup (29g)",p:3,f:3.6,c:92},
+  {n:"Shredded wheat no sugar",srv:"2 biscuits (46g)",p:5,f:5.2,c:156},
+  {n:"Grape-Nuts cereal",srv:"half cup (58g)",p:7,f:4,c:218},
+  {n:"Cheerios plain",srv:"1 cup (28g)",p:4,f:2.8,c:105},
+  {n:"Special K original",srv:"1 cup (31g)",p:6,f:1,c:117},
+  {n:"Corn flakes",srv:"1 cup (28g)",p:2,f:0.8,c:106},
+  {n:"Muesli no sugar added",srv:"half cup (55g)",p:6,f:4.4,c:200},
+  {n:"Granola homemade",srv:"half cup (61g)",p:7,f:4,c:298},
+  {n:"Whole wheat pasta dry",srv:"2 oz (56g)",p:7,f:4,c:195},
+  {n:"Whole wheat pasta cooked",srv:"1 cup (140g)",p:7,f:5,c:174},
+  {n:"White pasta dry",srv:"2 oz (56g)",p:7,f:1.6,c:208},
+  {n:"White pasta cooked",srv:"1 cup (140g)",p:8,f:2.5,c:221},
+  {n:"Rice noodles cooked",srv:"1 cup (176g)",p:3,f:1.6,c:192},
+  {n:"Egg noodles cooked",srv:"1 cup (160g)",p:7,f:1.8,c:221},
+  {n:"Protein pasta chickpea cooked",srv:"2 oz dry (56g)",p:11,f:4,c:190},
+  {n:"Rice cake plain",srv:"2 cakes (18g)",p:1,f:0.2,c:70},
+  {n:"Crispbread rye Wasa",srv:"2 crackers (20g)",p:2,f:3.4,c:68},
+  {n:"Bagel whole wheat",srv:"1 bagel (105g)",p:9,f:4.2,c:257},
+  {n:"English muffin whole wheat",srv:"1 muffin (58g)",p:5,f:2.9,c:129},
+  {n:"Popcorn air-popped",srv:"3 cups (24g)",p:1,f:3.5,c:93}
 ],
 Veg:[
-  {n:"Broccoli (raw)",p:2.8,f:2.6,c:34},{n:"Broccoli (steamed)",p:2.4,f:3.3,c:35},
-  {n:"Cauliflower (raw)",p:1.9,f:2.0,c:25},{n:"Brussels sprouts (cooked)",p:3.4,f:3.8,c:43},
-  {n:"Kale (raw)",p:4.3,f:3.6,c:49},{n:"Kale (steamed)",p:2.9,f:2.6,c:35},
-  {n:"Spinach (raw)",p:2.9,f:2.2,c:23},{n:"Spinach (cooked)",p:3.0,f:2.4,c:23},
-  {n:"Swiss chard (cooked)",p:1.9,f:1.6,c:20},{n:"Collard greens (cooked)",p:2.1,f:2.8,c:32},
-  {n:"Arugula / rocket (raw)",p:2.6,f:1.6,c:25},{n:"Watercress (raw)",p:2.3,f:0.5,c:11},
-  {n:"Mustard greens (cooked)",p:2.3,f:2.8,c:20},{n:"Edamame in pod (cooked)",p:8.2,f:3.7,c:100},
-  {n:"Green peas, frozen (cooked)",p:5.4,f:5.7,c:62},{n:"Snap peas (raw)",p:2.8,f:2.6,c:42},
-  {n:"Artichoke (cooked)",p:3.3,f:5.4,c:53},{n:"Asparagus (cooked)",p:2.9,f:2.1,c:22},
-  {n:"Green beans / French beans (cooked)",p:1.8,f:3.4,c:31},{n:"Okra (cooked)",p:2.0,f:3.2,c:33},
-  {n:"Fennel (raw)",p:1.2,f:3.1,c:31},{n:"Leeks (cooked)",p:1.5,f:1.8,c:31},
-  {n:"Broccoli rabe / rapini (cooked)",p:3.8,f:2.7,c:33},{n:"Bok choy (cooked)",p:1.6,f:1.0,c:13},
-  {n:"Napa cabbage (cooked)",p:1.1,f:1.3,c:13},{n:"Savoy cabbage (cooked)",p:1.9,f:3.1,c:27},
-  {n:"Red cabbage (raw)",p:1.4,f:2.1,c:31},{n:"Green cabbage (raw)",p:1.3,f:2.5,c:25},
-  {n:"Kohlrabi (raw)",p:1.7,f:3.6,c:27},{n:"Celery (raw)",p:0.7,f:1.6,c:16},
-  {n:"Cucumber (raw)",p:0.7,f:0.5,c:15},{n:"Zucchini / courgette (raw)",p:1.2,f:1.1,c:17},
-  {n:"Eggplant / aubergine (cooked)",p:0.8,f:2.5,c:33},{n:"Bell pepper, green (raw)",p:0.9,f:1.7,c:20},
-  {n:"Bell pepper, red (raw)",p:1.0,f:2.1,c:31},{n:"Jalapeno (raw)",p:0.9,f:1.4,c:29},
-  {n:"Tomato (raw)",p:0.9,f:1.2,c:18},{n:"Cherry tomatoes (raw)",p:0.9,f:1.2,c:18},
-  {n:"Avocado",p:2.0,f:6.7,c:160},{n:"Corn, sweet (cooked)",p:3.3,f:2.4,c:96},
-  {n:"Sweet potato (baked)",p:2.0,f:3.3,c:90},{n:"Yam (baked)",p:1.5,f:4.1,c:118},
-  {n:"Potato, Russet (baked with skin)",p:2.5,f:2.7,c:93},{n:"Potato, white (baked)",p:2.1,f:2.0,c:94},
-  {n:"Butternut squash (baked)",p:1.0,f:2.0,c:45},{n:"Acorn squash (baked)",p:1.8,f:4.5,c:56},
-  {n:"Spaghetti squash (baked)",p:0.7,f:1.5,c:31},{n:"Beets / beetroot (cooked)",p:1.7,f:2.8,c:44},
-  {n:"Carrots (raw)",p:0.9,f:2.8,c:41},{n:"Parsnip (cooked)",p:1.3,f:4.4,c:71},
-  {n:"Turnip (cooked)",p:0.9,f:2.0,c:22},{n:"Radish (raw)",p:0.7,f:1.6,c:16},
-  {n:"Jicama (raw)",p:0.7,f:4.9,c:38},{n:"Lotus root (cooked)",p:1.6,f:4.9,c:74},
-  {n:"Taro (cooked)",p:0.7,f:4.3,c:112},{n:"Cassava / yuca (cooked)",p:1.4,f:1.8,c:160},
-  {n:"Plantain (cooked)",p:0.8,f:2.3,c:116},{n:"Pumpkin (cooked)",p:1.0,f:0.5,c:20},
-  {n:"Onion (raw)",p:1.1,f:1.7,c:40},{n:"Red onion (raw)",p:1.1,f:1.7,c:40},
-  {n:"Shallots (raw)",p:2.5,f:3.2,c:72},{n:"Garlic (raw)",p:6.4,f:2.1,c:149},
-  {n:"Ginger root (raw)",p:1.8,f:2.0,c:80},{n:"Mushrooms, white (raw)",p:3.1,f:1.0,c:22},
-  {n:"Portobello mushroom (grilled)",p:3.0,f:1.3,c:26},{n:"Shiitake mushroom (cooked)",p:2.2,f:2.5,c:56},
-  {n:"Oyster mushroom (cooked)",p:1.6,f:2.3,c:33},{n:"Enoki mushrooms (raw)",p:2.7,f:2.7,c:37},
-  {n:"Lettuce, romaine (raw)",p:1.2,f:2.1,c:17},{n:"Lettuce, iceberg (raw)",p:0.9,f:1.2,c:14},
-  {n:"Endive (raw)",p:1.3,f:3.1,c:17},{n:"Radicchio (raw)",p:1.4,f:1.5,c:23},
-  {n:"Dandelion greens (raw)",p:2.7,f:3.5,c:45},{n:"Bean sprouts, mung (raw)",p:3.0,f:1.8,c:30},
-  {n:"Alfalfa sprouts (raw)",p:3.9,f:2.5,c:29},{n:"Sun-dried tomatoes (dry pack)",p:5.1,f:12.3,c:258},
-  {n:"Artichoke hearts (canned)",p:2.9,f:4.2,c:50},{n:"Hearts of palm (canned)",p:1.8,f:3.5,c:36},
-  {n:"Bamboo shoots (canned)",p:1.8,f:2.2,c:27},{n:"Water chestnuts (canned)",p:1.1,f:3.0,c:97},
-  {n:"Jackfruit (young green, cooked)",p:1.7,f:1.5,c:95},{n:"Rutabaga / swede (cooked)",p:1.0,f:2.3,c:37},
-  {n:"Sunchoke / Jerusalem artichoke (raw)",p:2.0,f:1.6,c:73},{n:"Asparagus (raw)",p:2.2,f:2.1,c:20},
-  {n:"Celeriac (cooked)",p:1.2,f:1.6,c:42},{n:"Kabocha squash (baked)",p:1.3,f:2.7,c:49}
+  {n:"Broccoli raw",srv:"1 cup chopped (91g)",p:3,f:2.4,c:31},
+  {n:"Broccoli steamed",srv:"1 cup (156g)",p:4,f:5.1,c:55},
+  {n:"Cauliflower raw",srv:"1 cup (107g)",p:2,f:2.1,c:27},
+  {n:"Brussels sprouts cooked",srv:"1 cup (156g)",p:5,f:5.9,c:67},
+  {n:"Kale raw",srv:"1 cup chopped (67g)",p:3,f:2.4,c:33},
+  {n:"Kale steamed",srv:"1 cup (130g)",p:4,f:3.4,c:46},
+  {n:"Spinach raw",srv:"2 cups (60g)",p:2,f:1.3,c:14},
+  {n:"Spinach cooked",srv:"1 cup (180g)",p:5,f:4.3,c:41},
+  {n:"Swiss chard cooked",srv:"1 cup (175g)",p:3,f:3.7,c:35},
+  {n:"Collard greens cooked",srv:"1 cup (190g)",p:4,f:5.3,c:61},
+  {n:"Arugula / rocket raw",srv:"2 cups (40g)",p:1,f:0.6,c:10},
+  {n:"Asparagus cooked",srv:"1 cup (180g)",p:5,f:3.8,c:40},
+  {n:"Green peas frozen cooked",srv:"1 cup (160g)",p:9,f:9.1,c:99},
+  {n:"Snap peas raw",srv:"1 cup (63g)",p:2,f:1.6,c:26},
+  {n:"Artichoke cooked",srv:"1 medium (120g)",p:4,f:6.5,c:64},
+  {n:"Green beans cooked",srv:"1 cup (125g)",p:2,f:4,c:44},
+  {n:"Okra cooked",srv:"1 cup (160g)",p:3,f:5.1,c:53},
+  {n:"Fennel raw",srv:"1 cup sliced (87g)",p:1,f:2.7,c:27},
+  {n:"Leeks cooked",srv:"1 cup (104g)",p:2,f:1.9,c:32},
+  {n:"Bok choy cooked",srv:"1 cup (170g)",p:3,f:1.7,c:22},
+  {n:"Green cabbage raw",srv:"1 cup shredded (89g)",p:1,f:2.2,c:22},
+  {n:"Red cabbage raw",srv:"1 cup shredded (89g)",p:1,f:1.9,c:28},
+  {n:"Kohlrabi raw",srv:"1 cup (135g)",p:2,f:4.9,c:36},
+  {n:"Celery raw",srv:"2 stalks (80g)",p:1,f:1.3,c:13},
+  {n:"Cucumber raw",srv:"1 cup sliced (119g)",p:1,f:0.6,c:16},
+  {n:"Zucchini / courgette raw",srv:"1 cup sliced (113g)",p:1,f:1.2,c:19},
+  {n:"Eggplant / aubergine cooked",srv:"1 cup (99g)",p:1,f:2.5,c:35},
+  {n:"Bell pepper green raw",srv:"1 medium (119g)",p:1,f:2,c:24},
+  {n:"Bell pepper red raw",srv:"1 medium (119g)",p:1,f:2.5,c:37},
+  {n:"Jalapeno raw",srv:"1 pepper (14g)",p:0.1,f:0.2,c:4},
+  {n:"Tomato raw",srv:"1 medium (123g)",p:1,f:1.5,c:22},
+  {n:"Cherry tomatoes raw",srv:"1 cup (149g)",p:1,f:1.8,c:27},
+  {n:"Avocado",srv:"half fruit (100g)",p:2,f:6.7,c:160},
+  {n:"Corn sweet cooked",srv:"1 ear (90g)",p:3,f:2.2,c:86},
+  {n:"Sweet potato baked",srv:"1 medium (114g)",p:2,f:3.8,c:103},
+  {n:"Yam baked",srv:"1 cup cubed (136g)",p:2,f:5.3,c:158},
+  {n:"Potato Russet baked with skin",srv:"1 medium (173g)",p:4,f:4.6,c:161},
+  {n:"Butternut squash baked",srv:"1 cup cubed (205g)",p:2,f:4.1,c:82},
+  {n:"Acorn squash baked",srv:"1 cup cubed (245g)",p:4,f:9,c:137},
+  {n:"Beets / beetroot cooked",srv:"1 cup sliced (170g)",p:3,f:4.7,c:75},
+  {n:"Carrots raw",srv:"1 medium (61g)",p:1,f:1.7,c:25},
+  {n:"Parsnip cooked",srv:"1 cup sliced (156g)",p:2,f:6.9,c:111},
+  {n:"Pumpkin cooked",srv:"1 cup mashed (245g)",p:2,f:1.2,c:49},
+  {n:"Onion raw",srv:"1 medium (110g)",p:1,f:1.9,c:44},
+  {n:"Red onion raw",srv:"half cup chopped (80g)",p:1,f:1.4,c:32},
+  {n:"Garlic raw",srv:"3 cloves (9g)",p:0.6,f:0.2,c:13},
+  {n:"Ginger root raw",srv:"1 tsp grated (5g)",p:0.1,f:0.1,c:4},
+  {n:"Mushrooms white raw",srv:"1 cup sliced (70g)",p:2,f:0.7,c:15},
+  {n:"Portobello mushroom grilled",srv:"1 cap (84g)",p:3,f:1.1,c:22},
+  {n:"Shiitake mushroom cooked",srv:"1 cup (145g)",p:3,f:3.6,c:81},
+  {n:"Lettuce romaine raw",srv:"2 cups (94g)",p:1,f:2,c:16},
+  {n:"Lettuce iceberg raw",srv:"2 cups (110g)",p:1,f:1.3,c:15},
+  {n:"Endive raw",srv:"1 cup (50g)",p:1,f:1.6,c:9},
+  {n:"Dandelion greens raw",srv:"1 cup (55g)",p:1.5,f:1.9,c:25},
+  {n:"Bean sprouts mung raw",srv:"1 cup (104g)",p:3,f:1.9,c:31},
+  {n:"Alfalfa sprouts raw",srv:"1 cup (33g)",p:1.3,f:0.8,c:10},
+  {n:"Sun-dried tomatoes dry pack",srv:"quarter cup (27g)",p:1.4,f:3.3,c:70},
+  {n:"Artichoke hearts canned",srv:"half cup (84g)",p:2,f:3.5,c:42},
+  {n:"Hearts of palm canned",srv:"half cup (73g)",p:1.3,f:2.6,c:26},
+  {n:"Bamboo shoots canned",srv:"1 cup (131g)",p:2,f:2.9,c:25},
+  {n:"Jackfruit young green cooked",srv:"1 cup (165g)",p:3,f:2.5,c:157},
+  {n:"Sunchoke / Jerusalem artichoke",srv:"1 cup sliced (150g)",p:3,f:2.4,c:110},
+  {n:"Celeriac cooked",srv:"1 cup (155g)",p:2,f:2.5,c:65}
 ],
 Nuts:[
-  {n:"Almonds (raw)",p:21.2,f:12.5,c:579},{n:"Almonds (dry roasted)",p:21.3,f:12.4,c:598},
-  {n:"Almond butter (smooth)",p:20.9,f:10.0,c:614},{n:"Almond flour / meal",p:21.1,f:10.6,c:571},
-  {n:"Peanuts (dry roasted)",p:26.2,f:8.5,c:585},{n:"Peanuts (raw)",p:25.8,f:8.5,c:567},
-  {n:"Natural peanut butter (smooth)",p:24.1,f:6.0,c:588},{n:"Peanut flour (low fat)",p:52.2,f:9.3,c:327},
-  {n:"Cashews (raw)",p:18.2,f:3.3,c:553},{n:"Cashews (dry roasted)",p:17.2,f:3.0,c:574},
-  {n:"Cashew butter",p:18.0,f:3.3,c:587},{n:"Pistachios (dry roasted, shelled)",p:20.9,f:10.3,c:569},
-  {n:"Walnuts (raw, halves)",p:15.2,f:6.7,c:654},{n:"Walnut butter",p:14.0,f:6.4,c:643},
-  {n:"Pecans (raw, halves)",p:9.2,f:9.6,c:691},{n:"Macadamia nuts (raw)",p:7.9,f:8.6,c:718},
-  {n:"Brazil nuts (raw)",p:14.3,f:7.5,c:659},{n:"Pine nuts (raw)",p:13.7,f:3.7,c:673},
-  {n:"Hazelnuts (dry roasted)",p:14.2,f:9.7,c:646},{n:"Hazelnut butter",p:14.0,f:9.5,c:628},
-  {n:"Pumpkin seeds / pepitas (roasted)",p:30.2,f:6.0,c:574},{n:"Pumpkin seed butter",p:27.0,f:5.0,c:568},
-  {n:"Sunflower seeds (dry roasted)",p:21.0,f:8.6,c:582},{n:"Sunflower seed butter",p:19.3,f:8.0,c:617},
-  {n:"Hemp seeds (shelled / hearts)",p:31.6,f:3.9,c:553},{n:"Chia seeds (raw)",p:16.5,f:34.4,c:486},
-  {n:"Flaxseeds (ground / milled)",p:18.3,f:27.3,c:534},{n:"Sesame seeds (toasted)",p:17.7,f:11.8,c:573},
-  {n:"Tahini (sesame paste)",p:17.0,f:9.3,c:595},{n:"Poppy seeds (raw)",p:17.9,f:19.5,c:525},
-  {n:"Watermelon seeds (dried)",p:28.3,f:0.5,c:557},{n:"Black sesame seeds",p:17.0,f:11.8,c:573},
-  {n:"Sacha inchi seeds (roasted)",p:27.0,f:8.0,c:562},{n:"Tiger nuts (raw)",p:4.0,f:33.0,c:396},
-  {n:"Coconut, shredded (unsweetened)",p:3.3,f:16.3,c:660},{n:"Coconut flour",p:19.3,f:38.5,c:400},
-  {n:"Mixed nuts (roasted, no salt)",p:16.8,f:8.0,c:607},{n:"Trail mix (nuts & seeds)",p:14.0,f:7.0,c:580},
-  {n:"Pistachio butter",p:21.0,f:10.0,c:574},{n:"Pecan butter",p:9.0,f:9.5,c:686},
-  {n:"Macadamia butter",p:8.0,f:8.5,c:710},{n:"Walnut pieces (raw)",p:15.2,f:6.7,c:654},
-  {n:"Salted peanuts",p:26.0,f:8.4,c:585},{n:"Dark chocolate almonds",p:13.0,f:8.0,c:520},
-  {n:"Roasted corn nuts",p:9.0,f:5.5,c:436},{n:"Hemp protein powder",p:49.9,f:10.7,c:400},
-  {n:"Chia seed pudding (with almond milk)",p:4.0,f:10.0,c:130},{n:"Peanut butter powder (PB2)",p:36.8,f:6.3,c:362},
-  {n:"Almond protein powder",p:52.0,f:10.0,c:450},{n:"Black walnut (raw)",p:24.1,f:6.8,c:618},
-  {n:"English walnut (raw)",p:15.2,f:6.7,c:654},{n:"Chestnut (roasted)",p:3.2,f:4.3,c:245},
-  {n:"Lotus seeds (dried)",p:15.4,f:2.0,c:332},{n:"Pistachio (raw, shelled)",p:20.2,f:10.6,c:562},
-  {n:"Roasted soy nuts (unsalted)",p:36.7,f:5.7,c:471},{n:"Pili nuts (raw)",p:10.4,f:5.5,c:719},
-  {n:"Butternuts / white walnuts (dried)",p:24.9,f:4.7,c:612},{n:"Sesame energy ball",p:15.0,f:10.0,c:480},
-  {n:"Seed mix (pumpkin+sunflower+flax)",p:22.0,f:12.0,c:565},{n:"Hemp & chia blend",p:22.0,f:18.0,c:525},
-  {n:"Peanut butter (commercial, smooth)",p:22.5,f:6.0,c:588}
+  {n:"Almonds raw",srv:"1 oz / 23 nuts (28g)",p:6,f:3.5,c:164},
+  {n:"Almonds dry roasted",srv:"1 oz (28g)",p:6,f:3.5,c:167},
+  {n:"Almond butter smooth",srv:"2 tbsp (32g)",p:7,f:3.2,c:196},
+  {n:"Almond flour / meal",srv:"quarter cup (28g)",p:6,f:3,c:160},
+  {n:"Peanuts dry roasted",srv:"1 oz (28g)",p:7,f:2.4,c:164},
+  {n:"Peanuts raw",srv:"1 oz (28g)",p:7,f:2.4,c:159},
+  {n:"Natural peanut butter smooth",srv:"2 tbsp (32g)",p:8,f:1.9,c:188},
+  {n:"Peanut butter commercial smooth",srv:"2 tbsp (32g)",p:7,f:1.9,c:188},
+  {n:"Peanut butter powder PB2",srv:"2 tbsp (12g)",p:4,f:0.8,c:45},
+  {n:"Cashews raw",srv:"1 oz (28g)",p:5,f:0.9,c:157},
+  {n:"Cashews dry roasted",srv:"1 oz (28g)",p:5,f:0.9,c:163},
+  {n:"Cashew butter",srv:"2 tbsp (32g)",p:6,f:1,c:188},
+  {n:"Pistachios dry roasted shelled",srv:"1 oz (28g)",p:6,f:2.9,c:160},
+  {n:"Walnuts raw halves",srv:"1 oz (28g)",p:4,f:1.9,c:185},
+  {n:"Walnut butter",srv:"2 tbsp (32g)",p:4,f:2,c:206},
+  {n:"Pecans raw halves",srv:"1 oz (28g)",p:3,f:2.7,c:196},
+  {n:"Macadamia nuts raw",srv:"1 oz (28g)",p:2,f:2.4,c:204},
+  {n:"Brazil nuts raw",srv:"1 oz (28g)",p:4,f:2.1,c:186},
+  {n:"Pine nuts raw",srv:"1 oz (28g)",p:4,f:1,c:191},
+  {n:"Hazelnuts dry roasted",srv:"1 oz (28g)",p:4,f:2.7,c:183},
+  {n:"Hazelnut butter",srv:"2 tbsp (32g)",p:4,f:3,c:201},
+  {n:"Pumpkin seeds / pepitas roasted",srv:"1 oz (28g)",p:9,f:1.7,c:163},
+  {n:"Sunflower seeds dry roasted",srv:"1 oz (28g)",p:6,f:2.4,c:165},
+  {n:"Sunflower seed butter",srv:"2 tbsp (32g)",p:6,f:2.6,c:197},
+  {n:"Hemp seeds shelled",srv:"3 tbsp (30g)",p:9.5,f:1.2,c:166},
+  {n:"Chia seeds raw",srv:"2 tbsp (20g)",p:3,f:6.9,c:97},
+  {n:"Flaxseeds ground / milled",srv:"2 tbsp (14g)",p:2.6,f:3.8,c:75},
+  {n:"Sesame seeds toasted",srv:"1 tbsp (9g)",p:1.6,f:1.1,c:52},
+  {n:"Tahini sesame paste",srv:"2 tbsp (30g)",p:5,f:2.8,c:178},
+  {n:"Poppy seeds raw",srv:"1 tbsp (9g)",p:1.6,f:1.8,c:47},
+  {n:"Watermelon seeds dried",srv:"1 oz (28g)",p:8,f:0.1,c:158},
+  {n:"Coconut shredded unsweetened",srv:"quarter cup (20g)",p:0.7,f:3.3,c:132},
+  {n:"Coconut flour",srv:"2 tbsp (14g)",p:2.7,f:5.4,c:56},
+  {n:"Mixed nuts roasted no salt",srv:"1 oz (28g)",p:5,f:2.2,c:173},
+  {n:"Trail mix nuts and seeds",srv:"quarter cup (38g)",p:5,f:2.7,c:220},
+  {n:"Chestnut roasted",srv:"3 nuts (28g)",p:0.9,f:1.2,c:69},
+  {n:"Hemp protein powder",srv:"3 tbsp (30g)",p:15,f:3.2,c:120},
+  {n:"Pistachio raw shelled",srv:"1 oz (28g)",p:6,f:3,c:159},
+  {n:"Roasted soy nuts unsalted",srv:"1 oz (28g)",p:10,f:1.6,c:132},
+  {n:"Seed mix pumpkin sunflower flax",srv:"2 tbsp (20g)",p:4.4,f:2.4,c:113},
+  {n:"Tiger nuts raw",srv:"1 oz (28g)",p:1.1,f:9.2,c:111},
+  {n:"Tahini sesame paste",srv:"2 tbsp (30g)",p:5,f:2.8,c:178}
 ],
 Fruit:[
-  {n:"Apple (raw, with skin)",p:0.3,f:2.4,c:52},{n:"Apple (raw, without skin)",p:0.3,f:1.3,c:48},
-  {n:"Applesauce (unsweetened)",p:0.2,f:1.2,c:42},{n:"Dried apple rings",p:0.9,f:8.7,c:243},
-  {n:"Banana (raw)",p:1.1,f:2.6,c:89},{n:"Banana (overripe)",p:1.1,f:2.4,c:99},
-  {n:"Plantain (raw)",p:1.3,f:2.3,c:122},{n:"Dried banana chips",p:2.3,f:7.7,c:519},
-  {n:"Orange (navel, raw)",p:0.9,f:2.2,c:47},{n:"Orange (blood, raw)",p:0.8,f:1.5,c:50},
-  {n:"Mandarin / clementine (raw)",p:0.8,f:1.7,c:53},{n:"Grapefruit (raw, pink)",p:0.8,f:1.6,c:42},
-  {n:"Lemon (raw, without peel)",p:1.1,f:2.8,c:29},{n:"Lime (raw)",p:0.7,f:2.8,c:30},
-  {n:"Tangerine (raw)",p:0.8,f:1.8,c:53},{n:"Kumquat (raw)",p:1.9,f:6.5,c:71},
-  {n:"Pomelo (raw)",p:0.8,f:1.0,c:38},{n:"Strawberries (raw)",p:0.7,f:2.0,c:32},
-  {n:"Strawberries (frozen, unsweetened)",p:0.5,f:1.8,c:35},{n:"Blueberries (raw)",p:0.7,f:2.4,c:57},
-  {n:"Blueberries (frozen)",p:0.6,f:2.0,c:51},{n:"Raspberries (raw)",p:1.2,f:6.5,c:52},
-  {n:"Raspberries (frozen)",p:1.0,f:5.9,c:51},{n:"Blackberries (raw)",p:1.4,f:5.3,c:43},
-  {n:"Blackberries (frozen)",p:1.2,f:4.9,c:47},{n:"Cranberries (raw)",p:0.4,f:4.6,c:46},
-  {n:"Dried cranberries (sweetened)",p:0.1,f:5.3,c:308},{n:"Cherries, sweet (raw)",p:1.1,f:1.6,c:63},
-  {n:"Cherries, sour (raw)",p:1.0,f:1.6,c:50},{n:"Dried cherries (unsweetened)",p:3.6,f:5.0,c:283},
-  {n:"Grapes, red/purple (raw)",p:0.7,f:0.9,c:69},{n:"Grapes, green/white (raw)",p:0.7,f:0.9,c:69},
-  {n:"Raisins (seedless)",p:3.1,f:3.7,c:299},{n:"Sultanas / golden raisins",p:2.9,f:2.7,c:302},
-  {n:"Currants, black (raw)",p:1.4,f:4.3,c:63},{n:"Currants, dried",p:3.8,f:6.8,c:283},
-  {n:"Watermelon (raw)",p:0.6,f:0.4,c:30},{n:"Cantaloupe / rockmelon (raw)",p:0.8,f:0.9,c:34},
-  {n:"Honeydew melon (raw)",p:0.5,f:0.8,c:36},{n:"Pineapple (raw)",p:0.5,f:1.4,c:50},
-  {n:"Pineapple (canned in juice)",p:0.4,f:0.9,c:60},{n:"Pineapple (dried)",p:2.1,f:8.3,c:346},
-  {n:"Mango (raw)",p:0.8,f:1.6,c:60},{n:"Mango (dried)",p:2.5,f:9.9,c:319},
-  {n:"Mango (frozen chunks)",p:0.5,f:1.4,c:62},{n:"Papaya (raw)",p:0.5,f:1.7,c:43},
-  {n:"Papaya (dried)",p:1.3,f:10.8,c:270},{n:"Guava (raw)",p:2.6,f:5.4,c:68},
-  {n:"Passion fruit (raw)",p:2.2,f:10.4,c:97},{n:"Kiwi fruit (raw, green)",p:1.1,f:3.0,c:61},
-  {n:"Kiwi fruit (raw, gold)",p:1.0,f:1.4,c:63},{n:"Kiwi (dried)",p:3.5,f:9.0,c:311},
-  {n:"Pear (raw, with skin)",p:0.4,f:3.1,c:57},{n:"Pear (canned in juice)",p:0.3,f:1.6,c:50},
-  {n:"Dried pear",p:1.9,f:7.5,c:262},{n:"Peach (raw)",p:0.9,f:1.5,c:39},
-  {n:"Peach (canned in juice)",p:0.5,f:1.0,c:44},{n:"Dried peach (unsweetened)",p:3.6,f:8.2,c:239},
-  {n:"Nectarine (raw)",p:1.1,f:1.7,c:44},{n:"Plum (raw)",p:0.7,f:1.4,c:46},
-  {n:"Prunes / dried plums",p:2.2,f:7.1,c:240},{n:"Apricot (raw)",p:1.4,f:2.0,c:48},
-  {n:"Dried apricots (unsulfured)",p:3.4,f:7.3,c:241},{n:"Fig (raw)",p:0.8,f:2.9,c:74},
-  {n:"Dried figs",p:3.3,f:9.8,c:249},{n:"Date, Medjool (raw)",p:1.8,f:6.7,c:277},
-  {n:"Date, Deglet Noor (dried)",p:2.5,f:8.0,c:282},{n:"Pomegranate (raw arils)",p:1.7,f:4.0,c:83},
-  {n:"Lychee (raw)",p:0.8,f:1.3,c:66},{n:"Dragon fruit / pitaya (raw, red)",p:1.1,f:2.9,c:60},
-  {n:"Star fruit / carambola (raw)",p:1.0,f:2.8,c:31},{n:"Jackfruit (ripe, raw)",p:1.7,f:1.5,c:95},
-  {n:"Durian (raw)",p:1.5,f:3.8,c:147},{n:"Persimmon (raw, Hachiya)",p:0.6,f:3.6,c:127},
-  {n:"Persimmon (raw, Fuyu)",p:0.6,f:3.6,c:81},{n:"Quince (raw)",p:0.4,f:1.9,c:57},
-  {n:"Breadfruit (raw)",p:1.1,f:4.9,c:103},{n:"Tamarind (raw pulp)",p:2.8,f:5.1,c:239},
-  {n:"Coconut meat (raw)",p:3.3,f:9.0,c:354},{n:"Coconut meat (dried, unsweetened)",p:6.9,f:16.3,c:650},
-  {n:"Acai (frozen pulp, unsweetened)",p:1.5,f:2.5,c:70},{n:"Elderberries (raw)",p:0.7,f:7.0,c:73},
-  {n:"Gooseberries (raw)",p:0.9,f:4.3,c:44},{n:"Mulberries (raw)",p:1.4,f:1.7,c:43},
-  {n:"Boysenberries (frozen)",p:1.1,f:5.3,c:50},{n:"Loganberries (frozen)",p:1.5,f:5.9,c:54},
-  {n:"Goji berries (dried)",p:14.3,f:7.4,c:349},{n:"Barberries (dried)",p:7.4,f:7.0,c:316},
-  {n:"Sea buckthorn berries (raw)",p:1.2,f:3.6,c:82},{n:"Feijoa / pineapple guava (raw)",p:1.2,f:6.4,c:61}
+  {n:"Apple raw with skin",srv:"1 medium (182g)",p:0.5,f:4.4,c:95},
+  {n:"Apple raw without skin",srv:"1 medium (182g)",p:0.5,f:2.4,c:87},
+  {n:"Applesauce unsweetened",srv:"half cup (122g)",p:0.2,f:1.5,c:51},
+  {n:"Dried apple rings",srv:"quarter cup (24g)",p:0.2,f:2.1,c:58},
+  {n:"Banana raw",srv:"1 medium (118g)",p:1.3,f:3.1,c:105},
+  {n:"Plantain cooked",srv:"1 cup sliced (154g)",p:1.2,f:3.5,c:179},
+  {n:"Dried banana chips",srv:"1 oz (28g)",p:0.6,f:2.2,c:145},
+  {n:"Orange navel raw",srv:"1 large (184g)",p:1.7,f:4.1,c:86},
+  {n:"Mandarin / clementine raw",srv:"2 fruits (148g)",p:1.2,f:2.5,c:78},
+  {n:"Grapefruit raw pink",srv:"half fruit (154g)",p:1.2,f:2.5,c:65},
+  {n:"Lemon raw",srv:"1 fruit (58g)",p:0.6,f:1.6,c:17},
+  {n:"Lime raw",srv:"1 fruit (44g)",p:0.3,f:1.2,c:13},
+  {n:"Tangerine raw",srv:"1 medium (84g)",p:0.7,f:1.5,c:45},
+  {n:"Kumquat raw",srv:"5 fruits (95g)",p:1.8,f:6.2,c:67},
+  {n:"Strawberries raw",srv:"1 cup (152g)",p:1.1,f:3,c:49},
+  {n:"Blueberries raw",srv:"1 cup (148g)",p:1.1,f:3.6,c:84},
+  {n:"Blueberries frozen",srv:"1 cup (155g)",p:0.9,f:3.1,c:79},
+  {n:"Raspberries raw",srv:"1 cup (123g)",p:1.5,f:8,c:64},
+  {n:"Blackberries raw",srv:"1 cup (144g)",p:2,f:7.6,c:62},
+  {n:"Cranberries raw",srv:"1 cup (100g)",p:0.4,f:4.6,c:46},
+  {n:"Dried cranberries sweetened",srv:"quarter cup (40g)",p:0.04,f:2.1,c:123},
+  {n:"Cherries sweet raw",srv:"1 cup (138g)",p:1.5,f:2.2,c:87},
+  {n:"Grapes red/purple raw",srv:"1 cup (92g)",p:0.6,f:0.8,c:63},
+  {n:"Grapes green/white raw",srv:"1 cup (92g)",p:0.6,f:0.8,c:63},
+  {n:"Raisins seedless",srv:"quarter cup (41g)",p:1.3,f:1.5,c:123},
+  {n:"Sultanas / golden raisins",srv:"quarter cup (41g)",p:1.2,f:1.1,c:124},
+  {n:"Currants dried",srv:"2 tbsp (18g)",p:0.7,f:1.2,c:51},
+  {n:"Watermelon raw",srv:"2 cups diced (280g)",p:1.7,f:1.1,c:84},
+  {n:"Cantaloupe / rockmelon raw",srv:"1 cup diced (156g)",p:1.2,f:1.4,c:53},
+  {n:"Honeydew melon raw",srv:"1 cup diced (170g)",p:0.9,f:1.4,c:61},
+  {n:"Pineapple raw",srv:"1 cup chunks (165g)",p:0.9,f:2.3,c:83},
+  {n:"Pineapple canned in juice",srv:"half cup (125g)",p:0.5,f:1.1,c:75},
+  {n:"Mango raw",srv:"1 cup sliced (165g)",p:1.4,f:2.6,c:99},
+  {n:"Papaya raw",srv:"1 cup cubed (145g)",p:0.7,f:2.5,c:62},
+  {n:"Guava raw",srv:"1 fruit (90g)",p:2.3,f:4.9,c:61},
+  {n:"Passion fruit raw",srv:"2 fruits (36g)",p:0.8,f:3.7,c:35},
+  {n:"Kiwi fruit raw green",srv:"2 medium (148g)",p:1.6,f:4.4,c:90},
+  {n:"Pear raw with skin",srv:"1 medium (178g)",p:0.7,f:5.5,c:101},
+  {n:"Pear canned in juice",srv:"half cup (124g)",p:0.4,f:2,c:62},
+  {n:"Peach raw",srv:"1 medium (150g)",p:1.4,f:2.3,c:58},
+  {n:"Nectarine raw",srv:"1 medium (142g)",p:1.5,f:2.4,c:62},
+  {n:"Plum raw",srv:"1 fruit (66g)",p:0.5,f:0.9,c:30},
+  {n:"Prunes / dried plums",srv:"5 prunes (42g)",p:0.9,f:3,c:101},
+  {n:"Apricot raw",srv:"3 fruits (105g)",p:1.5,f:2.1,c:50},
+  {n:"Dried apricots unsulfured",srv:"quarter cup (33g)",p:1.1,f:2.4,c:79},
+  {n:"Fig raw",srv:"2 figs (100g)",p:0.8,f:2.9,c:74},
+  {n:"Dried figs",srv:"3 figs (57g)",p:1.9,f:5.6,c:142},
+  {n:"Date Medjool raw",srv:"2 dates (48g)",p:0.9,f:3.2,c:133},
+  {n:"Date Deglet Noor dried",srv:"5 dates (40g)",p:1,f:3.2,c:113},
+  {n:"Pomegranate raw arils",srv:"half cup (87g)",p:1.5,f:3.5,c:72},
+  {n:"Lychee raw",srv:"10 fruits (100g)",p:0.8,f:1.3,c:66},
+  {n:"Dragon fruit / pitaya raw",srv:"1 cup (227g)",p:2.5,f:6.6,c:136},
+  {n:"Star fruit / carambola raw",srv:"1 cup sliced (108g)",p:1.1,f:3,c:33},
+  {n:"Jackfruit ripe raw",srv:"1 cup (165g)",p:2.8,f:2.5,c:157},
+  {n:"Durian raw",srv:"1 cup (243g)",p:3.6,f:9.2,c:357},
+  {n:"Persimmon raw Fuyu",srv:"1 fruit (168g)",p:1,f:6,c:118},
+  {n:"Quince raw",srv:"1 fruit (92g)",p:0.4,f:1.7,c:52},
+  {n:"Coconut meat raw",srv:"1 cup shredded (80g)",p:2.7,f:7.2,c:283},
+  {n:"Coconut meat dried unsweetened",srv:"quarter cup (20g)",p:1.4,f:3.3,c:130},
+  {n:"Acai frozen pulp unsweetened",srv:"1 packet (100g)",p:1.5,f:2.5,c:70},
+  {n:"Elderberries raw",srv:"1 cup (145g)",p:1,f:10.2,c:106},
+  {n:"Gooseberries raw",srv:"1 cup (150g)",p:1.4,f:6.5,c:66},
+  {n:"Mulberries raw",srv:"1 cup (140g)",p:2,f:2.4,c:60},
+  {n:"Goji berries dried",srv:"2 tbsp (15g)",p:2.1,f:1.1,c:52},
+  {n:"Feijoa / pineapple guava raw",srv:"2 fruits (100g)",p:1.2,f:6.4,c:61}
 ]
 };
 
@@ -851,7 +996,7 @@ function renderFoodList(foods){
   foods.forEach(function(food){
     var row=document.createElement('div');
     row.className='food-row'+(selectedFood&&selectedFood.n===food.n?' selected':'');
-    var servingLabel=food.origAmt?(food.origAmt+food.origUnit+' serving'):'per 100g';
+    var servingLabel=food.origAmt?(food.origAmt+food.origUnit+' serving'):(food.srv||'per 100g');
     var inner='<div><div class="food-name">'+food.n+'</div><div class="food-per">'+servingLabel+'</div></div>'
       +'<div style="display:flex;gap:4px;align-items:center;">'
       +'<span class="pill pill-p">'+(food.origP!=null?food.origP:food.p)+'g P</span>'
@@ -860,7 +1005,7 @@ function renderFoodList(foods){
       +(food.custom?'<button class="cfdelb" style="background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:0 2px;">x</button>':'')
       +'</div>';
     row.innerHTML=inner;
-    row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,food.c||food.cal100||0,row);});
+    row.addEventListener('click',function(){selectFoodItem(food.n,food.p,food.f,food.c||food.cal100||0,row,food.srv);});
     if(food.custom){
       var eb=row.querySelector('.cfeditb');
       if(eb){(function(fd){eb.addEventListener('click',function(e){e.stopPropagation();openEditCustomFood(fd);});})(food);}
@@ -871,11 +1016,29 @@ function renderFoodList(foods){
   });
 }
 
-function selectFoodItem(name,p,f,cal,row){
-  selectedFood={n:name,p:p,f:f,c:cal||0};
+function selectFoodItem(name,p,f,cal,row,srv){
+  selectedFood={n:name,p:p,f:f,c:cal||0,srv:srv||null};
   document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
   if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
+  // Update serving input label and default based on food type
+  var si=document.getElementById('servingInput');
+  var sl=document.getElementById('servingLabel');
+  var su=document.getElementById('servingUnit');
+  if(srv){
+    if(si){si.value='1';si.step='0.5';si.max='20';}
+    if(sl)sl.textContent='Servings';
+    if(su)su.style.display='none';
+  } else {
+    if(si){si.value='100';si.step='any';si.max='9999';}
+    if(sl)sl.textContent='Amount';
+    if(su)su.style.display='';
+  }
+  // Update calorie hint
+  var calNote=document.getElementById('calAutoNote');
+  var calEl=document.getElementById('manualCal');
+  if(calEl){calEl.value='';calEl.placeholder=cal?'auto (~'+cal+' cal/serving)':'0';}
+  if(calNote)calNote.textContent=cal?'- auto from database':'- enter if known';
 }
 function selectFood(el,name,p,f,cal){selectFoodItem(name,p,f,cal||0,el);}
 
@@ -886,6 +1049,8 @@ function toGrams(amount,unit){
     case 'lbs': return amount*453.592;
     case 'tbsp':return amount*15;
     case 'tsp': return amount*5;
+    case 'cup': return amount*240;
+    case 'serving': return amount;
     default:    return amount; // grams
   }
 }
@@ -927,8 +1092,17 @@ function addFood(){
   const servingLabel=servingRaw+unit;
   let name,p,f,cal;
   if(selectedFood){
-    name=selectedFood.n;p=r1(selectedFood.p*servingG/100);f=r1(selectedFood.f*servingG/100);
-    cal=selectedFood.c?r1(selectedFood.c*servingG/100):(parseFloat(document.getElementById('manualCal').value)||0);
+    name=selectedFood.n;
+    // If food has srv (per-serving DB), scale by qty multiplier; else per-100g scale
+    if(selectedFood.srv){
+      p=r1(selectedFood.p*servingRaw);
+      f=r1(selectedFood.f*servingRaw);
+      cal=selectedFood.c?r1(selectedFood.c*servingRaw):(parseFloat(document.getElementById('manualCal').value)||0);
+    } else {
+      p=r1(selectedFood.p*servingG/100);
+      f=r1(selectedFood.f*servingG/100);
+      cal=selectedFood.c?r1(selectedFood.c*servingG/100):(parseFloat(document.getElementById('manualCal').value)||0);
+    }
   } else {
     name=document.getElementById('searchInput').value.trim();
     p=parseFloat(document.getElementById('manualP').value)||0;
@@ -938,15 +1112,13 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
-  console.log('ADDING: cal=',cal,'selectedFood.c=',selectedFood?selectedFood.c:'no selectedFood','manualCal=',document.getElementById('manualCal').value);
-  console.log('[FibeCheck] adding entry: cal='+JSON.stringify(cal)+' selectedFood='+JSON.stringify(selectedFood));
   entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,cal:cal||0,serving:servingG,servingLabel,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
   document.getElementById('manualF').value='';
   document.getElementById('manualCal').value='';
-  document.getElementById('servingInput').value='100';
+  document.getElementById('servingInput').value=selectedFood&&selectedFood.srv?'1':'100';
   document.getElementById('servingUnit').value='g';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
@@ -1222,9 +1394,11 @@ async function lookupBarcode(){
     const calPer100=r1((nutr['energy-cal_100g']||nutr['energy-cal']||0));
     barcodeData={name:sname,p,f,cal:calPer100};
     document.getElementById('barcodeProductName').textContent=sname;
-    document.getElementById('barcodeP').textContent=`${p}g protein`;
-    document.getElementById('barcodeF').textContent=`${f}g fibre`;
-    document.getElementById('barcodeServing').textContent=`Per 100g - Serving size: ${prod.serving_size||'not listed'}`;
+    document.getElementById('barcodePInput').value=p;
+    document.getElementById('barcodeFInput').value=f;
+    document.getElementById('barcodeCInput').value=calPer100;
+    document.getElementById('barcodeServing').textContent='Values per 100g - Product serving: '+(prod.serving_size||'not listed');
+    document.getElementById('barcodeServingAmt').value=100;
     document.getElementById('barcodeResult').style.display='block';
     document.getElementById('barcodeStatus').textContent='';
   }catch(e){document.getElementById('barcodeStatus').textContent='Lookup failed. Check your connection.';}
@@ -1300,7 +1474,6 @@ function saveCustomFood(){
   if(custom.find(function(x){return x.n.toLowerCase()===name.toLowerCase();})){toast('Already in My Foods');return;}
   var calRaw=parseFloat(document.getElementById('cfCal').value)||0;
   var cal100=r1(calRaw/grams*100);
-  console.log('[FibeCheck] saving custom food: cal100='+cal100+' calRaw='+calRaw+' grams='+grams);
   custom.push({n:name,p:p100,f:f100,cal100:cal100,custom:true,added:Date.now(),origAmt:amt,origUnit:unit,origP:p,origF:f,origCal:calRaw});
   saveCustomFoods(custom);
   closeModal('customFood');
