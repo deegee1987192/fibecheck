@@ -427,25 +427,43 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     </div>
     <div class="modal-body">
       <input type="hidden" id="editId"/>
+      <input type="hidden" id="editSrvRef"/>
+      <input type="hidden" id="editSrvG"/>
       <div style="margin-bottom:10px;">
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Food name</label>
         <input class="text-input" id="editName" type="text" placeholder="Food name"/>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Serving size</label>
+        <div style="display:flex;gap:6px;">
+          <input class="num-input" id="editServingAmt" type="number" min="0.1" max="9999" step="0.5" style="flex:1;" oninput="onEditServingChange()"/>
+          <select id="editServingUnit" onchange="onEditServingChange()" style="padding:9px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:600;outline:none;">
+            <option value="serving">serving</option>
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="oz">oz</option>
+            <option value="cup">cup</option>
+            <option value="tbsp">tbsp</option>
+            <option value="tsp">tsp</option>
+          </select>
+        </div>
+        <div id="editSrvNote" style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic;"></div>
       </div>
       <div class="manual-grid" style="margin-bottom:8px;">
         <div class="field-wrap p"><label>Protein (g)</label><input class="num-input" id="editP" type="number" min="0" max="500" step="0.5"/></div>
         <div class="field-wrap f"><label>Fibre (g)</label><input class="num-input" id="editF" type="number" min="0" max="200" step="0.5"/></div>
       </div>
-      <div style="margin-bottom:10px;">
+      <div style="margin-bottom:12px;">
         <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e85d04;margin-bottom:4px;">Calories</label>
         <input class="num-input" id="editCal" type="number" placeholder="0" min="0" max="9999" step="1" style="width:100%;"/>
       </div>
       <div style="margin-bottom:12px;">
-        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Meal</label>
-        <div style="display:flex;gap:6px;">
-          <button class="meal-btn" onclick="setEditMeal('Breakfast',this)">&#127749; Breakfast</button>
-          <button class="meal-btn" onclick="setEditMeal('Lunch',this)">&#9728;&#65039; Lunch</button>
-          <button class="meal-btn" onclick="setEditMeal('Dinner',this)">&#127769; Dinner</button>
-          <button class="meal-btn" onclick="setEditMeal('Snack',this)">&#127822; Snack</button>
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Meal</label>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="meal-btn" onclick="setEditMeal('Breakfast',this)">Breakfast</button>
+          <button class="meal-btn" onclick="setEditMeal('Lunch',this)">Lunch</button>
+          <button class="meal-btn" onclick="setEditMeal('Dinner',this)">Dinner</button>
+          <button class="meal-btn" onclick="setEditMeal('Snack',this)">Snack</button>
         </div>
       </div>
       <button class="modal-btn primary" onclick="saveEdit()" style="margin-bottom:8px;">Save changes</button>
@@ -1130,7 +1148,9 @@ function addFood(){
     if(!p&&!f){toast('Enter protein or fibre values');return;}
   }
   const entries=getEntries();
-  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,cal:cal||0,serving:servingG,servingLabel,meal:activeMeal});
+  var srvRef=selectedFood&&selectedFood.srv?selectedFood.srv:null;
+  var srvGrams=selectedFood&&selectedFood.srvG?selectedFood.srvG:null;
+  entries.push({id:Date.now().toString(),date:activeDate,ts:Date.now(),name,p,f,cal:cal||0,serving:servingG,servingLabel,servingAmt:servingRaw,servingUnit:unit,srvG:srvGrams,srvRef:srvRef,meal:activeMeal});
   saveEntries(entries);
   document.getElementById('searchInput').value='';
   document.getElementById('manualP').value='';
@@ -1448,9 +1468,8 @@ function closeModal(type){
     barcodeData=null;
   }
   if(type==='edit'){
-    document.getElementById('editName').value='';
-    document.getElementById('editP').value='';
-    document.getElementById('editF').value='';
+    ['editName','editP','editF','editCal','editServingAmt','editSrvRef','editSrvG'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var editNote=document.getElementById('editSrvNote');if(editNote)editNote.textContent='';
   }
   if(type==='customFood'){
     document.getElementById('cfName').value='';
@@ -1581,17 +1600,49 @@ function openEdit(id){
   if(!entry)return;
   document.getElementById('editId').value=id;
   document.getElementById('editName').value=entry.name;
+  // Store reference per-serving values so we can rescale
+  // entryP1, entryF1, entryCal1 = macros for 1 unit of the logged serving
+  var srvAmt=entry.servingAmt||1;
+  var srvUnit=entry.servingUnit||'serving';
+  document.getElementById('editSrvRef').value=JSON.stringify({p1:entry.p/srvAmt,f1:entry.f/srvAmt,cal1:(entry.cal||0)/srvAmt,srvG:entry.srvG||null,srvRef:entry.srvRef||null});
+  document.getElementById('editSrvG').value=entry.srvG||'';
+  document.getElementById('editServingAmt').value=srvAmt;
+  document.getElementById('editServingUnit').value=srvUnit;
   document.getElementById('editP').value=entry.p||0;
   document.getElementById('editF').value=entry.f||0;
   document.getElementById('editCal').value=entry.cal||0;
+  // Show serving reference note
+  var note=document.getElementById('editSrvNote');
+  if(note)note.textContent=entry.srvRef?'1 serving = '+entry.srvRef:'';
   editMeal=entry.meal||'Breakfast';
-  // Highlight correct meal button
   document.querySelectorAll('#editModal .meal-btn').forEach(b=>{
-    b.classList.toggle('active', b.textContent.includes(editMeal));
+    b.classList.toggle('active',b.textContent.includes(editMeal));
   });
   document.getElementById('editModal').classList.add('open');
 }
 
+function onEditServingChange(){
+  var ref=document.getElementById('editSrvRef').value;
+  if(!ref)return;
+  var r;
+  try{r=JSON.parse(ref);}catch(e){return;}
+  var amt=parseFloat(document.getElementById('editServingAmt').value)||1;
+  var unit=document.getElementById('editServingUnit').value;
+  var multiplier;
+  if(unit==='serving'){
+    multiplier=amt;
+  } else if(r.srvG){
+    // Convert chosen unit to grams, then divide by grams-per-serving
+    var grams=toGrams(amt,unit);
+    multiplier=grams/r.srvG;
+  } else {
+    // No serving gram reference - just scale the per-unit value by amount
+    multiplier=amt;
+  }
+  document.getElementById('editP').value=r1(r.p1*multiplier);
+  document.getElementById('editF').value=r1(r.f1*multiplier);
+  document.getElementById('editCal').value=Math.round(r.cal1*multiplier);
+}
 function setEditMeal(meal,el){
   editMeal=meal;
   document.querySelectorAll('#editModal .meal-btn').forEach(b=>b.classList.remove('active'));
@@ -1601,13 +1652,19 @@ function setEditMeal(meal,el){
 function saveEdit(){
   const id=document.getElementById('editId').value;
   const name=document.getElementById('editName').value.trim();
+  const amt=parseFloat(document.getElementById('editServingAmt').value)||1;
+  const unit=document.getElementById('editServingUnit').value;
   const p=parseFloat(document.getElementById('editP').value)||0;
   const f=parseFloat(document.getElementById('editF').value)||0;
   const cal=parseFloat(document.getElementById('editCal').value)||0;
   if(!name){toast('Enter a food name');return;}
+  // Build serving label
+  const oldEntry=getEntries().find(e=>e.id===id)||{};
+  const srvRef=oldEntry.srvRef||null;
+  const srvLabel=unit==='serving'?(amt===1?(srvRef||'1 serving'):amt+'x '+(srvRef||'serving')):amt+unit;
   const entries=getEntries().map(e=>{
     if(e.id!==id)return e;
-    return {...e,name,p,f,cal,meal:editMeal};
+    return {...e,name,p,f,cal,meal:editMeal,servingAmt:amt,servingUnit:unit,servingLabel:srvLabel};
   });
   saveEntries(entries);
   closeModal('edit');
