@@ -1017,22 +1017,31 @@ function renderFoodList(foods){
 }
 
 function selectFoodItem(name,p,f,cal,row,srv){
-  selectedFood={n:name,p:p,f:f,c:cal||0,srv:srv||null};
+  // Extract gram weight of one serving from srv string e.g. "1 cup (244ml)" -> 244
+  var srvG=null;
+  if(srv){
+    var srvMatch=srv.match(/\((\d+(?:\.\d+)?)\s*(?:g|ml)\)/);
+    if(srvMatch)srvG=parseFloat(srvMatch[1]);
+  }
+  selectedFood={n:name,p:p,f:f,c:cal||0,srv:srv||null,srvG:srvG};
   document.querySelectorAll('.food-row').forEach(function(r){r.classList.remove('selected');});
   if(row)row.classList.add('selected');
   document.getElementById('manualEntry').style.display='none';
-  // Update serving input label and default based on food type
+  // Update serving input based on food type
   var si=document.getElementById('servingInput');
   var sl=document.getElementById('servingLabel');
   var su=document.getElementById('servingUnit');
+  var srvNote=document.getElementById('srvNote');
   if(srv){
     if(si){si.value='1';si.step='0.5';si.max='20';}
-    if(sl)sl.textContent='Servings';
-    if(su)su.style.display='none';
+    if(su){su.value='serving';su.style.display='';}
+    if(sl)sl.textContent='Amount';
+    if(srvNote)srvNote.textContent='1 serving = '+srv;
   } else {
     if(si){si.value='100';si.step='any';si.max='9999';}
+    if(su){su.value='g';su.style.display='';}
     if(sl)sl.textContent='Amount';
-    if(su)su.style.display='';
+    if(srvNote)srvNote.textContent='';
   }
   // Update calorie hint
   var calNote=document.getElementById('calAutoNote');
@@ -1093,15 +1102,24 @@ function addFood(){
   let name,p,f,cal;
   if(selectedFood){
     name=selectedFood.n;
-    // If food has srv (per-serving DB), scale by qty multiplier; else per-100g scale
     if(selectedFood.srv){
-      p=r1(selectedFood.p*servingRaw);
-      f=r1(selectedFood.f*servingRaw);
-      cal=selectedFood.c?r1(selectedFood.c*servingRaw):(parseFloat(document.getElementById('manualCal').value)||0);
+      var multiplier;
+      if(unit==='serving'){
+        // Scale by number of servings
+        multiplier=servingRaw;
+      } else if(selectedFood.srvG){
+        // User chose grams/ml/etc  convert to serving fraction
+        multiplier=servingG/selectedFood.srvG;
+      } else {
+        multiplier=servingRaw;
+      }
+      p=r1(selectedFood.p*multiplier);
+      f=r1(selectedFood.f*multiplier);
+      cal=selectedFood.c?Math.round(selectedFood.c*multiplier):(parseFloat(document.getElementById('manualCal').value)||0);
     } else {
       p=r1(selectedFood.p*servingG/100);
       f=r1(selectedFood.f*servingG/100);
-      cal=selectedFood.c?r1(selectedFood.c*servingG/100):(parseFloat(document.getElementById('manualCal').value)||0);
+      cal=selectedFood.c?Math.round(selectedFood.c*servingG/100):(parseFloat(document.getElementById('manualCal').value)||0);
     }
   } else {
     name=document.getElementById('searchInput').value.trim();
@@ -1118,8 +1136,9 @@ function addFood(){
   document.getElementById('manualP').value='';
   document.getElementById('manualF').value='';
   document.getElementById('manualCal').value='';
-  document.getElementById('servingInput').value=selectedFood&&selectedFood.srv?'1':'100';
+  document.getElementById('servingInput').value='100';
   document.getElementById('servingUnit').value='g';
+  var sn=document.getElementById('srvNote');if(sn)sn.textContent='';
   document.getElementById('manualEntry').style.display='none';
   selectedFood=null;
   renderFoodList(getFoodsForCat(currentCat));
@@ -1584,10 +1603,11 @@ function saveEdit(){
   const name=document.getElementById('editName').value.trim();
   const p=parseFloat(document.getElementById('editP').value)||0;
   const f=parseFloat(document.getElementById('editF').value)||0;
+  const cal=parseFloat(document.getElementById('editCal').value)||0;
   if(!name){toast('Enter a food name');return;}
   const entries=getEntries().map(e=>{
     if(e.id!==id)return e;
-    return {...e,name,p,f,meal:editMeal};
+    return {...e,name,p,f,cal,meal:editMeal};
   });
   saveEntries(entries);
   closeModal('edit');
