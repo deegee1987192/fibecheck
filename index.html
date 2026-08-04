@@ -1250,38 +1250,129 @@ function dateFrom(period){
 }
 
 function renderHistory(){
+  const MEAL_ORDER=['Breakfast','Lunch','Dinner','Snack'];
+  const goals=getGoals();
   const from=dateFrom(currentPeriod);
-  const entries=getEntries().filter(e=>e.date>=from);
+  const allEntries=getEntries().filter(e=>e.date>=from);
   const byDay={};
-  entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
+  allEntries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
   const days=Object.keys(byDay).sort().reverse();
+
+  // --- Stats: only count days with at least 1 entry for avg ---
   const nd=days.length||1;
-  const totP=r1(entries.reduce((s,e)=>s+(e.p||0),0));
-  const totF=r1(entries.reduce((s,e)=>s+(e.f||0),0));
-  const totCal=Math.round(entries.reduce((s,e)=>s+(e.cal||0),0));
+  const totP=r1(allEntries.reduce((s,e)=>s+(e.p||0),0));
+  const totF=r1(allEntries.reduce((s,e)=>s+(e.f||0),0));
+  const totCal=Math.round(allEntries.reduce((s,e)=>s+(e.cal||0),0));
+  // Avg cal only counts days that have entries (not missing days in period)
   document.getElementById('statGrid').innerHTML=`
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${totP}g</div><div class="stat-lbl">Total protein</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${totF}g</div><div class="stat-lbl">Total fibre</div></div>
     <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${totCal}</div><div class="stat-lbl">Total cal</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--green-bright)">${r1(totP/nd)}g</div><div class="stat-lbl">Avg/day P</div></div>
     <div class="stat-box"><div class="stat-val" style="color:var(--amber-bright)">${r1(totF/nd)}g</div><div class="stat-lbl">Avg/day F</div></div>
-    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${Math.round(totCal/nd)}</div><div class="stat-lbl">Avg/day cal</div></div>`;
+    <div class="stat-box"><div class="stat-val" style="color:#e85d04;">${Math.round(totCal/nd)}</div><div class="stat-lbl">Avg/day cal<br><span style="font-size:9px;font-weight:400;opacity:.7;">logged days only</span></div></div>`;
+
   if(!days.length){document.getElementById('histList').innerHTML='<div class="empty">No entries yet.</div>';return;}
-  document.getElementById('histList').innerHTML=days.map(date=>{
+
+  // --- Highlight missing meals ---
+  // Determine which meals are typically expected based on goals
+  // Flag a day as "incomplete" if it's missing Lunch or Dinner (main meals)
+  function getMissingMeals(de){
+    const logged=new Set(de.map(e=>e.meal||'Snack'));
+    return['Lunch','Dinner'].filter(m=>!logged.has(m));
+  }
+
+  // --- Build day cards ---
+  const listEl=document.getElementById('histList');
+  listEl.innerHTML='';
+
+  days.forEach(date=>{
     const de=byDay[date];
     const dp=r1(de.reduce((s,e)=>s+(e.p||0),0));
     const df=r1(de.reduce((s,e)=>s+(e.f||0),0));
-    return`<div class="hist-day">
-      <div class="hist-day-head" onclick="toggleHistDay(this)">
-        <span class="hist-date">${fmtDate(date)}</span>
-        <div style="display:flex;gap:5px;align-items:center;">
-          <span class="pill pill-p">${dp}g P</span><span class="pill pill-f">${df}g F</span>
-          <span style="font-size:13px;color:var(--muted);margin-left:2px">></span>
+    const dc=Math.round(de.reduce((s,e)=>s+(e.cal||0),0));
+    const missing=getMissingMeals(de);
+    const incomplete=missing.length>0&&date!==todayKey();
+
+    const card=document.createElement('div');
+    card.className='hist-day';
+    if(incomplete)card.style.borderLeft='3px solid var(--amber-bright)';
+
+    // Header
+    const head=document.createElement('div');
+    head.className='hist-day-head';
+    head.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="hist-date">${fmtDate(date)}</span>
+          ${incomplete?`<span style="font-size:10px;font-weight:700;color:var(--amber-bright);background:rgba(245,158,11,.12);padding:1px 6px;border-radius:10px;">missing ${missing.join(', ')}</span>`:''}
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span class="pill pill-p">${dp}g P</span>
+          <span class="pill pill-f">${df}g F</span>
+          <span style="font-size:11px;font-weight:700;color:#e85d04;background:rgba(232,93,4,.1);padding:2px 7px;border-radius:10px;">${dc} cal</span>
         </div>
       </div>
-      <div class="hist-entries">${de.map(e=>`<div class="hist-entry"><span>${esc(e.name)} <span style="color:var(--muted)">${e.serving||100}g</span></span><div style="display:flex;gap:5px;">${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''}${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}</div></div>`).join('')}</div>
-    </div>`;
-  }).join('');
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="deleteDay('${date}')" style="background:none;border:none;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;padding:4px 6px;border-radius:4px;opacity:.8;" title="Delete all entries for this day">Delete</button>
+        <span class="hist-chevron" style="font-size:13px;color:var(--muted);transition:transform .2s;">&#8250;</span>
+      </div>`;
+    head.addEventListener('click',function(e){
+      if(e.target.closest('button'))return;
+      const body=card.querySelector('.hist-entries');
+      const chev=card.querySelector('.hist-chevron');
+      const isOpen=body.classList.toggle('open');
+      if(chev)chev.style.transform=isOpen?'rotate(90deg)':'';
+    });
+
+    // Entries body grouped by meal
+    const body=document.createElement('div');
+    body.className='hist-entries';
+    const byMeal={};
+    de.forEach(e=>{const m=e.meal||'Snack';if(!byMeal[m])byMeal[m]=[];byMeal[m].push(e);});
+    let bodyHTML='';
+    MEAL_ORDER.forEach(meal=>{
+      if(!byMeal[meal])return;
+      bodyHTML+=`<div style="padding:4px 14px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">${meal}</div>`;
+      byMeal[meal].forEach(e=>{
+        bodyHTML+=`<div class="hist-entry" style="display:flex;justify-content:space-between;align-items:center;padding:5px 14px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">${esc(e.name)}</div>
+            <div style="font-size:11px;color:var(--muted);">${e.servingLabel||((e.serving||100)+'g')}</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            ${e.p?`<span class="pill pill-p">${e.p}g P</span>`:''}
+            ${e.f?`<span class="pill pill-f">${e.f}g F</span>`:''}
+            ${e.cal?`<span style="font-size:11px;font-weight:700;color:#e85d04;">${e.cal}cal</span>`:''}
+            <button onclick="openEdit('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">&#9998;</button>
+            <button onclick="deleteHistEntry('${e.id}')" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:2px 4px;opacity:.7;" title="Delete">x</button>
+          </div>
+        </div>`;
+      });
+    });
+    body.innerHTML=bodyHTML;
+
+    card.appendChild(head);
+    card.appendChild(body);
+    listEl.appendChild(card);
+  });
+}
+
+function deleteDay(date){
+  if(!confirm('Delete all entries for '+fmtDate(date)+'?'))return;
+  saveEntries(getEntries().filter(e=>e.date!==date));
+  if(activeDate===date)renderToday();
+  renderHistory();
+  toast('Day deleted');
+}
+
+function deleteHistEntry(id){
+  if(!confirm('Delete this entry?'))return;
+  saveEntries(getEntries().filter(e=>e.id!==id));
+  renderHistory();
+  if(getEntries().some(e=>e.date===activeDate))renderToday();
+  else renderToday();
+  toast('Entry deleted');
 }
 
 function toggleHistDay(head){head.nextElementSibling.classList.toggle('open');}
