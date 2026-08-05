@@ -1095,8 +1095,8 @@ function setMeal(meal,el){
 function shiftDay(dir){
   const d=new Date(activeDate+'T12:00:00');
   d.setDate(d.getDate()+dir);
-  const newDate=d.toISOString().slice(0,10);
-  if(newDate>todayKey()) return; // can't go to future
+  const newDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(newDate>todayKey()) return;
   activeDate=newDate;
   renderDayHeader();
   renderToday();
@@ -1105,7 +1105,7 @@ function shiftDay(dir){
 function renderDayHeader(){
   const isToday=activeDate===todayKey();
   const d=new Date(activeDate+'T12:00:00');
-  document.getElementById('dayLabel').textContent=isToday?'Today':activeDate===new Date(Date.now()-86400000).toISOString().slice(0,10)?'Yesterday':d.toLocaleDateString('en-CA',{weekday:'long'});
+  document.getElementById('dayLabel').textContent=isToday?'Today':activeDate===(function(){var y=new Date();y.setDate(y.getDate()-1);return y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');})()?'Yesterday':d.toLocaleDateString('en-CA',{weekday:'long'});
   document.getElementById('dayDate').textContent=d.toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'});
   document.getElementById('nextDayBtn').style.opacity=isToday?'0.3':'1';
   document.getElementById('nextDayBtn').style.pointerEvents=isToday?'none':'auto';
@@ -1244,8 +1244,8 @@ function setPeriod(p,el){
 
 function dateFrom(period){
   const now=new Date();
-  if(period==='week'){const d=new Date(now);d.setDate(now.getDate()-now.getDay());return d.toISOString().slice(0,10);}
-  if(period==='month')return new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+  if(period==='week'){const d=new Date(now);d.setDate(now.getDate()-now.getDay());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  if(period==='month'){const d=new Date(now.getFullYear(),now.getMonth(),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';}
   return'2020-01-01';
 }
 
@@ -1333,7 +1333,10 @@ function renderHistory(){
     let bodyHTML='';
     MEAL_ORDER.forEach(meal=>{
       if(!byMeal[meal])return;
-      bodyHTML+=`<div style="padding:4px 14px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">${meal}</div>`;
+      bodyHTML+=`<div style="padding:4px 14px 2px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">${meal}</span>
+        <button onclick="copyMeal('${date}','${meal}')" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;padding:2px 8px;">Copy</button>
+      </div>`;
       byMeal[meal].forEach(e=>{
         bodyHTML+=`<div class="hist-entry" style="display:flex;justify-content:space-between;align-items:center;padding:5px 14px;">
           <div style="flex:1;">
@@ -1356,6 +1359,52 @@ function renderHistory(){
     card.appendChild(body);
     listEl.appendChild(card);
   });
+}
+
+/* -- COPY MEAL -- */
+var copyMealData=null;
+
+function copyMeal(date,meal){
+  const entries=getEntries().filter(e=>e.date===date&&(e.meal||'Snack')===meal);
+  if(!entries.length){toast('No entries for '+meal+' on that day');return;}
+  copyMealData={date,meal,entries};
+  // Show the copy modal
+  document.getElementById('copyMealTitle').textContent='Copy '+meal+' from '+fmtDate(date);
+  // Build target date options: today + last 7 days
+  const opts=[];
+  for(var i=0;i<8;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const dk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    opts.push('<option value="'+dk+'">'+(i===0?'Today':i===1?'Yesterday':fmtDate(dk))+'</option>');
+  }
+  document.getElementById('copyTargetDate').innerHTML=opts.join('');
+  // Build meal selector - default to same meal
+  document.querySelectorAll('#copyModal .meal-btn').forEach(function(b){
+    b.classList.toggle('active',b.dataset.meal===meal);
+  });
+  copyTargetMeal=meal;
+  document.getElementById('copyMealModal').classList.add('open');
+}
+
+var copyTargetMeal='Breakfast';
+function setCopyMeal(meal,el){
+  copyTargetMeal=meal;
+  document.querySelectorAll('#copyModal .meal-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+}
+
+function confirmCopyMeal(){
+  if(!copyMealData)return;
+  const targetDate=document.getElementById('copyTargetDate').value;
+  const now=Date.now();
+  const newEntries=copyMealData.entries.map(function(e,i){
+    return Object.assign({},e,{id:(now+i).toString(),date:targetDate,ts:now+i,meal:copyTargetMeal});
+  });
+  saveEntries(getEntries().concat(newEntries));
+  if(targetDate===activeDate)renderToday();
+  closeModal('copyMeal');
+  toast(copyMealData.meal+' copied to '+document.getElementById('copyTargetDate').options[document.getElementById('copyTargetDate').selectedIndex].text);
+  copyMealData=null;
 }
 
 function deleteDay(date){
@@ -1569,6 +1618,7 @@ function closeModal(type){
     document.getElementById('cfP').value='';
     document.getElementById('cfF').value='';
   }
+  if(type==='copyMeal'){var cm=document.getElementById('copyMealModal');if(cm)cm.classList.remove('open');copyMealData=null;}
   if(type==='customEdit'){
     var cm=document.getElementById('customEditModal');if(cm)cm.classList.remove('open');
     ['cfEditName','cfEditAmt','cfEditP','cfEditF'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -1813,6 +1863,33 @@ var hd=new Date();document.getElementById('headerDate').textContent=hd.toLocaleD
       </div>
       <button class="modal-btn primary" onclick="saveEditCustomFood()" style="margin-bottom:8px;">Save changes</button>
       <button class="modal-btn secondary" onclick="closeModal('customEdit')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- COPY MEAL MODAL -->
+<div class="modal-overlay" id="copyMealModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="copyMealTitle">Copy meal</span>
+      <button class="modal-close" onclick="closeModal('copyMeal')">&#215;</button>
+    </div>
+    <div class="modal-body" id="copyModal">
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Copy to date</label>
+        <select id="copyTargetDate" style="width:100%;padding:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:600;outline:none;"></select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">As meal</label>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="meal-btn active" data-meal="Breakfast" onclick="setCopyMeal('Breakfast',this)">Breakfast</button>
+          <button class="meal-btn" data-meal="Lunch" onclick="setCopyMeal('Lunch',this)">Lunch</button>
+          <button class="meal-btn" data-meal="Dinner" onclick="setCopyMeal('Dinner',this)">Dinner</button>
+          <button class="meal-btn" data-meal="Snack" onclick="setCopyMeal('Snack',this)">Snack</button>
+        </div>
+      </div>
+      <button class="modal-btn primary" onclick="confirmCopyMeal()" style="margin-bottom:8px;">Copy entries</button>
+      <button class="modal-btn secondary" onclick="closeModal('copyMeal')">Cancel</button>
     </div>
   </div>
 </div>
